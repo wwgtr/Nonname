@@ -8,10 +8,11 @@
     <style>
         body { background: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .container { width: 100%; max-width: 800px; }
-        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; box-sizing: border-box;}
         button { background: #3b82f6; color: white; cursor: pointer; font-weight: bold; }
         .video-container { margin-top: 20px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
-        .ua-box { background: #1e293b; padding: 15px; border-radius: 8px; }
+        .ua-box { background: #1e293b; padding: 15px; border-radius: 8px; margin-top: 10px;}
+        label { font-size: 0.9rem; color: #94a3b8; }
     </style>
 </head>
 <body>
@@ -40,11 +41,15 @@
 <script>
     const player = videojs('my-video');
 
+    // وضع القيم الافتراضية المطلوبة
+    document.getElementById('streamUrl').value = "http://het101b.ycn-redirect.com/live/918454578001/index.m3u8?t=P93H65rxLY2EYBA3mEgpsQ&e=1779796246";
+    document.getElementById('uaInput').value = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36";
+
     function generateUA() {
         const uas = [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
             "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
-            "Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36"
+            "Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
         ];
         document.getElementById('uaInput').value = uas[Math.floor(Math.random() * uas.length)];
     }
