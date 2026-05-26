@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مشغل البث المباشر</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body { background-color: #0d0d0d; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { width: 100%; max-width: 850px; }
+        .box { background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        input { width: 70%; padding: 12px; border: 1px solid #333; border-radius: 6px; background: #000; color: #fff; }
+        button { padding: 12px 25px; background: #cc0000; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        video { width: 100%; margin-top: 20px; border-radius: 10px; background: black; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="box">
+            <h2>مشغل البث المباشر</h2>
+            <input type="text" id="streamUrl" placeholder="أدخل رابط البث m3u8 هنا...">
+            <button onclick="loadStream()">تشغيل</button>
+        </div>
+        <video id="video" controls autoplay></video>
+    </div>
+
+    <script>
+        var video = document.getElementById('video');
+        var hls = new Hls();
+        function loadStream() {
+            var url = document.getElementById('streamUrl').value;
+            if (Hls.isSupported()) {
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                video.play();
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url;
+            }
+        }
+    </script>
+</body>
+</html>
+
