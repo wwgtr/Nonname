@@ -2,42 +2,60 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>مشغل البث المباشر</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Player Pro</title>
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
     <style>
-        body { background-color: #0d0d0d; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { width: 100%; max-width: 850px; }
-        .box { background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        input { width: 70%; padding: 12px; border: 1px solid #333; border-radius: 6px; background: #000; color: #fff; }
-        button { padding: 12px 25px; background: #cc0000; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        video { width: 100%; margin-top: 20px; border-radius: 10px; background: black; }
+        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { width: 100%; max-width: 800px; }
+        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; }
+        button { background: #3b82f6; color: white; cursor: pointer; font-weight: bold; }
+        .video-container { margin-top: 20px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
+        .ua-box { background: #1e293b; padding: 15px; border-radius: 8px; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="box">
-            <h2>مشغل البث المباشر</h2>
-            <input type="text" id="streamUrl" placeholder="أدخل رابط البث m3u8 هنا...">
-            <button onclick="loadStream()">تشغيل</button>
-        </div>
-        <video id="video" controls autoplay></video>
+<div class="container">
+    <h2>مشغل البث الاحترافي</h2>
+    
+    <input type="text" id="streamUrl" placeholder="أدخل رابط m3u8 هنا...">
+    
+    <div class="ua-box">
+        <label>User-Agent:</label>
+        <input type="text" id="uaInput" placeholder="User-Agent...">
+        <button onclick="generateUA()">توليد عشوائي</button>
     </div>
 
-    <script>
-        var video = document.getElementById('video');
-        var hls = new Hls();
-        function loadStream() {
-            var url = document.getElementById('streamUrl').value;
-            if (Hls.isSupported()) {
-                hls.loadSource(url);
-                hls.attachMedia(video);
-                video.play();
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = url;
-            }
+    <button onclick="loadStream()">تشغيل البث</button>
+
+    <div class="video-container">
+        <video id="my-video" class="video-js vjs-big-play-centered" controls preload="auto" width="800" height="450">
+            <p class="vjs-no-js">يرجى تفعيل الجافا سكريبت لتشغيل الفيديو.</p>
+        </video>
+    </div>
+</div>
+
+<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+<script>
+    const player = videojs('my-video');
+
+    function generateUA() {
+        const uas = [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+            "Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36"
+        ];
+        document.getElementById('uaInput').value = uas[Math.floor(Math.random() * uas.length)];
+    }
+
+    function loadStream() {
+        const url = document.getElementById('streamUrl').value;
+        if(url) {
+            player.src({ src: url, type: 'application/x-mpegURL' });
+            player.play();
         }
-    </script>
+    }
+</script>
 </body>
 </html>
-
