@@ -621,3 +621,96 @@
     
     if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
+
+    // ========== ربط الخيارات الجديدة ==========
+    
+    // إظهار/إخفاء قسم الميزات عند الضغط على الإعدادات
+    document.getElementById('settingsBtn').addEventListener('click', function() {
+        var section = document.getElementById('featuresSection');
+        section.style.display = section.style.display === 'none' ? 'block' : 'none';
+        this.style.transform = section.style.display === 'block' ? 'rotate(45deg)' : 'rotate(0)';
+    });
+    
+    // حكمة اليوم
+    document.getElementById('dailyWisdomBtn').addEventListener('click', function() {
+        if (typeof getDailyWisdomIndex === 'function') {
+            var index = getDailyWisdomIndex(quotes);
+            showQuote(index);
+            showToast('📅 حكمة اليوم: ' + new Date().toLocaleDateString('ar-SA'));
+        }
+    });
+    
+    // إنشاء أزرار التصنيفات ديناميكياً
+    function initCategories() {
+        var container = document.getElementById('categoriesContainer');
+        container.innerHTML = '';
+        for (var cat in categoriesData) {
+            var btn = document.createElement('button');
+            btn.textContent = categoriesData[cat].icon + ' ' + cat;
+            btn.style.cssText = 'padding: 6px 10px; background: rgba(' + hexToRgb(categoriesData[cat].color) + ', 0.1); color: ' + categoriesData[cat].color + '; border: 1px solid ' + categoriesData[cat].color + '; border-radius: 6px; cursor: pointer; font-size: 0.75em; font-family: Cairo; transition: all 0.2s;';
+            btn.addEventListener('mouseover', function() { this.style.background = 'rgba(' + hexToRgb(this.style.color) + ', 0.2)'; });
+            btn.addEventListener('mouseout', function() { this.style.background = 'rgba(' + hexToRgb(this.style.color) + ', 0.1)'; });
+            btn.addEventListener('click', function() {
+                filterByCategory(cat);
+            });
+            container.appendChild(btn);
+        }
+    }
+    
+    // تحويل hex إلى rgb
+    function hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? parseInt(result[1], 16) + ',' + parseInt(result[2], 16) + ',' + parseInt(result[3], 16) : '212,168,67';
+    }
+    
+    // تصفية حسب التصنيف
+    function filterByCategory(category) {
+        var filtered = quotes.filter(q => {
+            var cats = categorizeQuote(q.text);
+            return cats.includes(category);
+        });
+        if (filtered.length > 0) {
+            currentIndex = quotes.indexOf(filtered[0]);
+            showQuote(currentIndex);
+            showToast('تم تصفية الأقوال حسب: ' + category + ' (' + filtered.length + ')');
+        }
+    }
+    
+    // تحديث الإحصائيات
+    function updateStats() {
+        if (typeof userStats !== 'undefined') {
+            document.getElementById('quotesReadCount').textContent = userStats.quotesRead;
+            document.getElementById('favoritesCount').textContent = favorites.length;
+        }
+    }
+    
+    // اختيار الخط
+    document.getElementById('fontSelector').addEventListener('change', function() {
+        currentFont = this.value;
+        showToast('تم تغيير الخط إلى: ' + this.options[this.selectedIndex].text);
+    });
+    
+    // اختيار الملمس
+    document.getElementById('textureSelector').addEventListener('change', function() {
+        currentTexture = this.value;
+        showToast('تم تغيير الملمس إلى: ' + this.options[this.selectedIndex].text);
+    });
+    
+    // متغيرات عامة للخط والملمس
+    var currentFont = 'Amiri';
+    var currentTexture = 'بدون';
+    
+    // تهيئة الخيارات الجديدة عند تحميل الصفحة
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            initCategories();
+            updateStats();
+        }, 500);
+    });
+    
+    // تحديث الإحصائيات عند تغيير المفضلة
+    var originalToggleFavorite = toggleFavorite;
+    toggleFavorite = function(index) {
+        originalToggleFavorite(index);
+        updateStats();
+    };
