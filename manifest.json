@@ -1,0 +1,18 @@
+{
+  "name": "أقوال الإمام علي (عليه السلام) - منصة رقمية متكاملة",
+  "short_name": "أمام آل",
+  "description": "منصة رقمية متكاملة لأقوال وأشعار الإمام علي بن أبي طالب (عليه السلام)",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a0505",
+  "theme_color": "#d4a843",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a0505' width='192' height='192'/><text x='96' y='120' font-size='80' fill='%23d4a843' text-anchor='middle' font-family='Arial' font-weight='bold'>علي</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -2,65 +2,567 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream Player Pro</title>
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>أقوال الإمام علي (ع)</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#d4a843">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="أمام آل">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&family=Jomhuria:wght@400;700&family=Tajawal:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { width: 100%; max-width: 800px; }
-        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; box-sizing: border-box;}
-        button { background: #3b82f6; color: white; cursor: pointer; font-weight: bold; }
-        .video-container { margin-top: 20px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
-        .ua-box { background: #1e293b; padding: 15px; border-radius: 8px; margin-top: 10px;}
-        label { font-size: 0.9rem; color: #94a3b8; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #0a0505;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            direction: rtl;
+            overflow: hidden;
+        }
+        #particlesCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 500px;
+            width: 100%;
+            background: rgba(10, 5, 5, 0.75);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(212, 168, 67, 0.12);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+            transition: all 0.3s ease;
+        }
+        .container.dark-mode {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+        }
+        .container.minimal-mode .controls,
+        .container.minimal-mode .navigation,
+        .container.minimal-mode header {
+            display: none !important;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(212,168,67,0.08);
+        }
+        header h1 {
+            font-family: 'Amiri', serif;
+            font-size: 2em;
+            color: #d4a843;
+            text-shadow: 0 0 40px rgba(212,168,67,0.2);
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.85em;
+            font-family: 'Amiri', serif;
+        }
+        .quote-card {
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(212,168,67,0.08);
+            border-radius: 18px;
+            padding: 35px 20px;
+            margin-bottom: 20px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        .quote-card:hover { border-color: rgba(212,168,67,0.15); }
+        .quote-text {
+            font-family: 'Amiri', serif;
+            font-size: 1.5em;
+            color: #f5f0e8;
+            text-align: center;
+            line-height: 2;
+            width: 100%;
+        }
+        .quote-mark {
+            color: #d4a843;
+            font-size: 1.2em;
+            opacity: 0.35;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.8em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
+        }
+        .btn-primary { background: rgba(212,168,67,0.12); color: #d4a843; border: 1px solid rgba(212,168,67,0.2); }
+        .btn-primary:hover { background: rgba(212,168,67,0.2); transform: scale(1.02); }
+        .btn-success { background: rgba(76,175,80,0.1); color: #66bb6a; border: 1px solid rgba(76,175,80,0.2); }
+        .btn-success:hover { background: rgba(76,175,80,0.18); transform: scale(1.02); }
+        .btn-share { background: rgba(33,150,243,0.1); color: #64b5f6; border: 1px solid rgba(33,150,243,0.2); }
+        .btn-share:hover { background: rgba(33,150,243,0.18); transform: scale(1.02); }
+        .btn-info { background: rgba(33,150,243,0.1); color: #64b5f6; border: 1px solid rgba(33,150,243,0.2); }
+        .btn-info:hover { background: rgba(33,150,243,0.18); transform: scale(1.02); }
+        .btn-secondary { background: rgba(158,158,158,0.1); color: #e0e0e0; border: 1px solid rgba(158,158,158,0.2); }
+        .btn-secondary:hover { background: rgba(158,158,158,0.18); transform: scale(1.02); }
+        .btn-settings { background: rgba(255,255,255,0.05); color: #aaa; border: 1px solid rgba(255,255,255,0.1); }
+        .btn-settings:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 0 5px;
+        }
+        .nav-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #ccc;
+            padding: 10px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.12); color: #fff; transform: scale(1.02); }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: rgba(15,10,5,0.97);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(212,168,67,0.12);
+            border-radius: 22px;
+            padding: 25px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 12px; left: 18px;
+            font-size: 1.8em;
+            color: rgba(255,255,255,0.35);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            line-height: 1;
+        }
+        .close-btn:hover { color: #d4a843; }
+        .modal-content h2 {
+            color: #d4a843;
+            font-family: 'Amiri', serif;
+            font-size: 1.6em;
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(212,168,67,0.1);
+        }
+        .about-section {
+            margin-bottom: 18px;
+            padding: 15px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 14px;
+            border: 1px solid rgba(212,168,67,0.06);
+        }
+        .about-section h3 { color: #d4a843; font-size: 1em; margin-bottom: 8px; font-family: 'Amiri', serif; }
+        .about-section p { color: rgba(255,255,255,0.7); line-height: 1.7; font-size: 0.9em; }
+        .developer-name { font-family: 'Amiri', serif; font-size: 1.3em !important; color: #f5f0e8 !important; text-align: center; }
+        .social-links { display: flex; flex-direction: column; gap: 8px; }
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #ccc;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.85em;
+            direction: ltr;
+        }
+        .social-link svg { width: 24px; height: 24px; }
+        .social-link.telegram { background: rgba(0,136,204,0.1); border: 1px solid rgba(0,136,204,0.2); }
+        .social-link.instagram { background: rgba(225,48,108,0.1); border: 1px solid rgba(225,48,108,0.2); }
+        .social-link:hover { transform: translateY(-2px); color: #fff; }
+        .dedication-list { list-style: none; padding: 0; }
+        .dedication-list li { color: rgba(255,255,255,0.65); padding: 5px 0; font-size: 0.95em; font-family: 'Amiri', serif; }
+        .dedication-list li::before { content: "— "; color: #d4a843; }
+        .dedication-text { color: #d4a843 !important; font-style: italic; margin-top: 10px; text-align: center; font-size: 0.85em !important; }
+        
+        #searchInput {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(212,168,67,0.15);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+            color: #f5f0e8;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            outline: none;
+        }
+        #searchInput:focus { border-color: #d4a843; }
+        #searchInput::placeholder { color: rgba(255,255,255,0.25); }
+        #quotesList { max-height: 350px; overflow-y: auto; }
+        .quote-item {
+            padding: 12px 14px;
+            margin-bottom: 6px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        .quote-item:hover { background: rgba(212,168,67,0.06); border-color: rgba(212,168,67,0.15); }
+        .quote-item .q-text { color: #f5f0e8; font-family: 'Amiri', serif; font-size: 1em; line-height: 1.6; }
+        .quote-item .q-number { color: rgba(255,255,255,0.3); font-size: 0.75em; margin-top: 4px; }
+        
+        .toast {
+            position: fixed;
+            bottom: 25px; left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(10,8,5,0.92);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            color: #f5f0e8;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.8em;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.5s ease;
+            border: 1px solid rgba(212,168,67,0.1);
+            text-align: center;
+            white-space: nowrap;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        
+        .settings-group { margin-bottom: 20px; }
+        .settings-group label { display: block; color: #d4a843; font-size: 0.9em; margin-bottom: 8px; }
+        .settings-group select, .settings-group input[type="range"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(212,168,67,0.15);
+            background: rgba(255,255,255,0.05);
+            color: #f5f0e8;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9em;
+            outline: none;
+        }
+        .settings-group select option { background: #1a0a05; }
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(212,168,67,0.08);
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .toggle-switch span { color: rgba(255,255,255,0.7); font-size: 0.9em; }
+        .toggle-switch .toggle-track {
+            width: 50px; height: 26px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 13px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .toggle-switch .toggle-track.active { background: rgba(212,168,67,0.4); }
+        .toggle-switch .toggle-track::after {
+            content: '';
+            position: absolute;
+            top: 3px; left: 3px;
+            width: 20px; height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        .toggle-switch .toggle-track.active::after { left: 27px; }
+        
+        /* نافذة اختيار الخلفية للحفظ */
+        .save-modal-content {
+            max-width: 600px !important;
+        }
+        .bg-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 5px;
+        }
+        .bg-grid-item {
+            padding: 10px;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .bg-grid-item:hover { transform: scale(1.05); }
+        .bg-grid-item.selected { border-color: #d4a843; box-shadow: 0 0 15px rgba(212,168,67,0.3); }
+        .bg-grid-item .preview {
+            width: 100%;
+            height: 50px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+        }
+        .bg-grid-item .name {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.7em;
+        }
+        .save-btn-confirm {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(212,168,67,0.2);
+            color: #d4a843;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .save-btn-confirm:hover { background: rgba(212,168,67,0.3); transform: scale(1.02); }
+        
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(212,168,67,0.2); border-radius: 10px; }
+        
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .container { padding: 18px; border-radius: 20px; }
+            header h1 { font-size: 1.6em; }
+            .quote-card { padding: 30px 15px; min-height: 170px; }
+            .quote-text { font-size: 1.3em; }
+            .controls { gap: 6px; }
+            .btn { padding: 10px 12px; font-size: 0.75em; min-width: 70px; }
+            .nav-btn { padding: 10px 15px; font-size: 0.8em; }
+            .bg-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 360px) {
+            .container { padding: 12px; }
+            .quote-text { font-size: 1.1em; }
+            .btn { font-size: 0.7em; padding: 8px 10px; min-width: 60px; }
+            .bg-grid { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h2>مشغل البث الاحترافي</h2>
-    
-    <input type="text" id="streamUrl" placeholder="أدخل رابط m3u8 هنا...">
-    
-    <div class="ua-box">
-        <label>User-Agent:</label>
-        <input type="text" id="uaInput" placeholder="User-Agent...">
-        <button onclick="generateUA()">توليد عشوائي</button>
+    <canvas id="particlesCanvas"></canvas>
+    <div class="container" id="mainContainer">
+        <header>
+            <h1>أقوال الإمام علي</h1>
+            <p class="subtitle">علي بن أبي طالب (عليه السلام)</p>
+        </header>
+        <div class="quote-card" id="quoteCard">
+            <div class="quote-text">
+                <span class="quote-mark">&#xFD3F;</span>
+                <span id="quoteContent">جارٍ التحميل...</span>
+                <span class="quote-mark">&#xFD3E;</span>
+            </div>
+        </div>
+        <div class="controls">
+            <button id="shuffleBtn" class="btn btn-primary">قول عشوائي</button>
+            <button id="saveBtn" class="btn btn-success">حفظ كصورة</button>
+            <button id="shareBtn" class="btn btn-share">مشاركة</button>
+            <button id="allQuotesBtn" class="btn btn-info">جميع الأقوال</button>
+            <button id="aboutBtn" class="btn btn-secondary">حول</button>
+            <button id="settingsBtn" class="btn btn-settings">⚙️</button>
+        </div>
+        <div class="navigation">
+            <button id="prevBtn" class="nav-btn">السابق</button>
+            <button id="nextBtn" class="nav-btn">التالي</button>
+        </div>
     </div>
 
-    <button onclick="loadStream()">تشغيل البث</button>
-
-    <div class="video-container">
-        <video id="my-video" class="video-js vjs-big-play-centered" controls preload="auto" width="800" height="450">
-            <p class="vjs-no-js">يرجى تفعيل الجافا سكريبت لتشغيل الفيديو.</p>
-        </video>
+    <div id="allQuotesModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeAllQuotes">&times;</span>
+            <h2>جميع الأقوال</h2>
+            <input type="text" id="searchInput" placeholder="ابحث عن قول...">
+            <div id="quotesList"></div>
+        </div>
     </div>
-</div>
 
-<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-<script>
-    const player = videojs('my-video');
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeAbout">&times;</span>
+            <h2>حول الموقع</h2>
+            <div class="about-section">
+                <h3>الهدف من الموقع</h3>
+                <p>موقع متخصص في نشر حكم وأقوال الإمام علي بن أبي طالب (عليه السلام)، يهدف إلى إحياء التراث الإسلامي وتقديم الحكمة العلوية بأسلوب عصري وجذاب.</p>
+            </div>
+            <div class="about-section">
+                <h3>إنشاء وتطوير</h3>
+                <p class="developer-name">سيف علي</p>
+            </div>
+            <div class="about-section">
+                <h3>تابعنا</h3>
+                <div class="social-links">
+                    <a href="https://t.me/WWGTR" target="_blank" class="social-link telegram">
+                        <svg viewBox="0 0 24 24" fill="#0088cc"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                        <span>WWGTR</span>
+                    </a>
+                    <a href="https://instagram.com/ne_7u" target="_blank" class="social-link instagram">
+                        <svg viewBox="0 0 24 24" fill="#e1306c"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+                        <span>NE_7U</span>
+                    </a>
+                </div>
+            </div>
+            <div class="about-section">
+                <h3>إهداء</h3>
+                <p>إلى أرواح:</p>
+                <ul class="dedication-list">
+                    <li>ياسين مطر</li>
+                    <li>كامل مطر</li>
+                    <li>مهند حسن</li>
+                    <li>حسين ناصر</li>
+                </ul>
+                <p class="dedication-text">الفاتحة إلى أرواحهم الطاهرة</p>
+            </div>
+        </div>
+    </div>
 
-    // وضع القيم الافتراضية المطلوبة
-    document.getElementById('streamUrl').value = "http://het101b.ycn-redirect.com/live/918454578001/index.m3u8?t=P93H65rxLY2EYBA3mEgpsQ&e=1779796246";
-    document.getElementById('uaInput').value = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36";
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeSettings">&times;</span>
+            <h2>الإعدادات</h2>
+            
+            <div class="settings-group">
+                <label>حجم الخط للقول</label>
+                <select id="fontSizeSelect">
+                    <option value="small">صغير</option>
+                    <option value="medium" selected>متوسط</option>
+                    <option value="large">كبير</option>
+                    <option value="xlarge">كبير جداً</option>
+                </select>
+            </div>
+            
+            <div class="settings-group">
+                <div class="toggle-switch" id="darkModeToggle">
+                    <span>الوضع الداكن</span>
+                    <div class="toggle-track" id="darkModeTrack"></div>
+                </div>
+            </div>
+            
+            <div class="settings-group">
+                <div class="toggle-switch" id="minimalModeToggle">
+                    <span>إخفاء كل شيء عدا الشرار والقول</span>
+                    <div class="toggle-track" id="minimalModeTrack"></div>
+                </div>
+            </div>
+            
+            <div class="settings-group">
+                <label>مؤقت تلقائي (ثواني)</label>
+                <select id="timerSelect">
+                    <option value="0">إيقاف</option>
+                    <option value="5">5 ثواني</option>
+                    <option value="10">10 ثواني</option>
+                    <option value="30">30 ثانية</option>
+                    <option value="60">دقيقة</option>
+                </select>
+            </div>
+        </div>
+    </div>
 
-    function generateUA() {
-        const uas = [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
-            "Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
-        ];
-        document.getElementById('uaInput').value = uas[Math.floor(Math.random() * uas.length)];
-    }
+    <!-- نافذة اختيار الخلفية والتنسيق للحفظ -->
+    <div id="saveModal" class="modal">
+        <div class="modal-content save-modal-content">
+            <span class="close-btn" id="closeSave">&times;</span>
+            <h2>خيارات حفظ الصورة</h2>
+            
+            <div class="settings-group">
+                <label>اختر تنسيق التحميل</label>
+                <select id="formatSelect">
+                    <option value="hd">صورة عالية الدقة (2160×3840)</option>
+                    <option value="story">ستوري (1080×1920)</option>
+                    <option value="instagram">منشور انستقرام (1080×1080)</option>
+                    <option value="instagram_story">ستوري انستقرام (1080×1920)</option>
+                    <option value="telegram">منشور تلجرام (1280×720)</option>
+                    <option value="facebook">صورة فيسبوك (1200×628)</option>
+                    <option value="sticker">ملصق شفاف (1024×1024)</option>
+                    <option value="video_story">فيديو ستوري متحرك (10 ثواني)</option>
+                </select>
+            </div>
+            
+            <h3 style="color: #d4a843; margin-top: 20px; margin-bottom: 15px; font-size: 1.1em;">اختر خلفية الصورة</h3>
+            <div class="bg-grid" id="bgGrid"></div>
+            <button id="confirmSave" class="save-btn-confirm">حفظ الصورة</button>
+        </div>
+    </div>
 
-    function loadStream() {
-        const url = document.getElementById('streamUrl').value;
-        if(url) {
-            player.src({ src: url, type: 'application/x-mpegURL' });
-            player.play();
-        }
-    }
-</script>
+    <canvas id="imageCanvas" style="display:none;"></canvas>
+    <div id="toast" class="toast"></div>
+
+    <script src="quotes.js"></script>
+    <script src="extra_quotes.js"></script>
+    <script src="extensions.js"></script>
+    
+    
+    
+    <script src="app.js"></script>
 </body>
 </html>
+
+    <script>
+        // تسجيل Service Worker للعمل بدون إنترنت
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js').then(reg => {
+                console.log('✓ Service Worker تم تسجيله بنجاح');
+            }).catch(err => {
+                console.log('Service Worker فشل التسجيل:', err);
+            });
+        }
+    </script>
