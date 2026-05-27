@@ -714,3 +714,46 @@
         originalToggleFavorite(index);
         updateStats();
     };
+
+    // ========== تغيير الخط المباشر على النص ==========
+    
+    // تحديث دالة اختيار الخط لتطبيق التأثير فوراً
+    var fontSelectorElement = document.getElementById('fontSelector');
+    if (fontSelectorElement) {
+        fontSelectorElement.addEventListener('change', function() {
+            var selectedFont = this.value;
+            var fontFamily = '';
+            
+            // تحديد عائلة الخط
+            if (selectedFont === 'Amiri') fontFamily = "'Amiri', serif";
+            else if (selectedFont === 'Cairo') fontFamily = "'Cairo', sans-serif";
+            else if (selectedFont === 'Jomhuria') fontFamily = "'Jomhuria', cursive";
+            else if (selectedFont === 'Tajawal') fontFamily = "'Tajawal', sans-serif";
+            
+            // تطبيق الخط على النص المعروض
+            var quoteContent = document.getElementById('quoteContent');
+            if (quoteContent) {
+                quoteContent.style.fontFamily = fontFamily;
+            }
+            
+            // تطبيق الخط على جميع الأقوال في القائمة
+            var quoteItems = document.querySelectorAll('.quote-item');
+            quoteItems.forEach(function(item) {
+                item.style.fontFamily = fontFamily;
+            });
+            
+            // حفظ اختيار الخط
+            localStorage.setItem('selectedFont', selectedFont);
+            showToast('✓ تم تغيير الخط إلى: ' + this.options[this.selectedIndex].text);
+        });
+    }
+    
+    // تطبيق الخط المحفوظ عند تحميل الصفحة
+    window.addEventListener('load', function() {
+        var savedFont = localStorage.getItem('selectedFont') || 'Amiri';
+        var fontSelectorElement = document.getElementById('fontSelector');
+        if (fontSelectorElement) {
+            fontSelectorElement.value = savedFont;
+            fontSelectorElement.dispatchEvent(new Event('change'));
+        }
+    });
