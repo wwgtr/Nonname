@@ -487,7 +487,16 @@
         
         ctx.fillStyle=format.transparent ? '#d4a843' : '#f5f0e8'; ctx.textAlign='center'; ctx.textBaseline='middle';
         var tl=quote.text.length, bfs = Math.floor(canvas.width * (tl<=30?0.06:tl<=50?0.05:tl<=80?0.04:0.035));
-        ctx.font=bfs+'px "Amiri", serif';
+        var selectedFont = localStorage.getItem('selectedFontForSave') || 'amiri';
+        var fontMap = {
+            'amiri': '"Amiri", serif',
+            'cairo': '"Cairo", sans-serif',
+            'thmanyah_serif': '"ThmanyahSerif", serif',
+            'thmanyah_display': '"ThmanyahDisplay", serif',
+            'thmanyah_sans': '"ThmanyahSans", sans-serif'
+        };
+        var fontFamily = fontMap[selectedFont] || '"Amiri", serif';
+        ctx.font=bfs+'px '+fontFamily;
         
         var words=quote.text.split(' '), lines=[], cl='';
         for (var w=0;w<words.length;w++) {
