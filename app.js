@@ -52,19 +52,14 @@
         { id: 'instagram_story', name: 'ستوري انستقرام', width: 1080, height: 1920 },
         { id: 'telegram', name: 'منشور تلجرام', width: 1280, height: 720 },
         { id: 'facebook', name: 'صورة فيسبوك', width: 1200, height: 628 },
-        { id: 'sticker', name: 'ملصق شفاف فائق الدقة', width: 4096, height: 4096, transparent: true },
+        { id: 'sticker', name: 'ملصق شفاف', width: 1024, height: 1024, transparent: true },
         { id: 'video_story', name: 'فيديو ستوري (10 ثواني)', width: 1080, height: 1920, isVideo: true }
     ];
     
     function init() {
-        // دمج الأقوال الأصلية مع الأقوال الجديدة المستخرجة من الديوان
-        var allQuotes = [];
-        if (typeof quotesData !== 'undefined') allQuotes = allQuotes.concat(quotesData);
-        if (typeof extraQuotesData !== 'undefined') allQuotes = allQuotes.concat(extraQuotesData);
-        
-        if (allQuotes.length > 0) {
-            quotes = allQuotes;
-            shuffleQuote();
+        if (typeof quotesData !== 'undefined' && quotesData.length > 0) {
+            quotes = quotesData;
+            shuffleQuote(); // البداية بقول عشوائي
         } else {
             document.getElementById('quoteContent').textContent = 'لا توجد أقوال متاحة';
         }
@@ -218,12 +213,11 @@
         // تأثير تحريك النص (Typewriter)
         el.textContent = '';
         var i = 0;
-                function typeWriter() {
-            if (i === 0) el.textContent = '﴿';
-            if (i < quote.text.length) { 
-                el.textContent = '﴿' + quote.text.substring(0, i + 1) + '﴾'; 
-                i++; 
-                setTimeout(typeWriter, 30); 
+        function typeWriter() {
+            if (i < quote.text.length) {
+                el.textContent += quote.text.charAt(i);
+                i++;
+                setTimeout(typeWriter, 30);
             }
         }
         typeWriter();
@@ -348,49 +342,14 @@
             list.appendChild(allHeader);
         }
         
-        // فصل الأقوال الأصلية عن أشعار الديوان
-        var originalQuotes = [];
-        var divanQuotes = [];
-        for (var i = 0; i < arr.length; i++) {
-            if (typeof quotesData !== 'undefined' && quotesData.some(q => q.text === arr[i].text)) {
-                originalQuotes.push({idx: i, quote: arr[i]});
-            } else {
-                divanQuotes.push({idx: i, quote: arr[i]});
-            }
-        }
-        
-        // إضافة قسم الأقوال الأصلية
-        if (originalQuotes.length > 0) {
-            var origHeader = document.createElement('h3');
-            origHeader.textContent = 'أقوال الإمام علي (ع)';
-            origHeader.style.color = '#d4a843'; origHeader.style.margin = '15px 0';
-            list.appendChild(origHeader);
-            for (var i = 0; i < originalQuotes.length; i++) {
-                (function(data) {
-                    var item = document.createElement('div');
-                    item.className = 'quote-item';
-                    item.innerHTML = '<div class="q-text">'+data.quote.text+'</div><div class="q-number">#'+(i+1)+'</div>';
-                    item.addEventListener('click',function(){ showQuote(data.idx); closeAllQuotes(); });
-                    list.appendChild(item);
-                })(originalQuotes[i]);
-            }
-        }
-        
-        // إضافة قسم أشعار الديوان
-        if (divanQuotes.length > 0) {
-            var divanHeader = document.createElement('h3');
-            divanHeader.textContent = 'أشعار واقتباسات الديوان';
-            divanHeader.style.color = '#d4a843'; divanHeader.style.margin = '15px 0';
-            list.appendChild(divanHeader);
-            for (var i = 0; i < divanQuotes.length; i++) {
-                (function(data) {
-                    var item = document.createElement('div');
-                    item.className = 'quote-item';
-                    item.innerHTML = '<div class="q-text">'+data.quote.text+'</div><div class="q-number">#'+(i+1)+'</div>';
-                    item.addEventListener('click',function(){ showQuote(data.idx); closeAllQuotes(); });
-                    list.appendChild(item);
-                })(divanQuotes[i]);
-            }
+        for (var i=0;i<arr.length;i++) {
+            (function(idx){
+                var item = document.createElement('div');
+                item.className = 'quote-item';
+                item.innerHTML = '<div class="q-text">'+arr[idx].text+'</div><div class="q-number">#'+(idx+1)+'</div>';
+                item.addEventListener('click',function(){ showQuote(idx); closeAllQuotes(); });
+                list.appendChild(item);
+            })(i);
         }
     }
     
@@ -539,10 +498,7 @@
         
         var lh=bfs*1.8, sy=cy+ch/2-(lines.length-1)*lh/2;
         for (var l=0;l<lines.length;l++) {
-            var lineText = lines[l];
-            if (l === 0) lineText = '﴿' + lineText;
-            if (l === lines.length - 1) lineText = lineText + '﴾';
-            ctx.fillText(lineText, canvas.width/2, sy + l*lh);
+            ctx.fillText(lines[l].trim(), canvas.width/2, sy+l*lh);
         }
         
         if (!format.transparent) {
@@ -622,138 +578,30 @@
     if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
 
-    // ========== ربط الخيارات الجديدة ==========
-    
-    // إظهار/إخفاء قسم الميزات عند الضغط على الإعدادات
-    document.getElementById('settingsBtn').addEventListener('click', function() {
-        var section = document.getElementById('featuresSection');
-        section.style.display = section.style.display === 'none' ? 'block' : 'none';
-        this.style.transform = section.style.display === 'block' ? 'rotate(45deg)' : 'rotate(0)';
-    });
-    
-    // حكمة اليوم
-    document.getElementById('dailyWisdomBtn').addEventListener('click', function() {
-        if (typeof getDailyWisdomIndex === 'function') {
-            var index = getDailyWisdomIndex(quotes);
-            showQuote(index);
-            showToast('📅 حكمة اليوم: ' + new Date().toLocaleDateString('ar-SA'));
-        }
-    });
-    
-    // إنشاء أزرار التصنيفات ديناميكياً
-    function initCategories() {
-        var container = document.getElementById('categoriesContainer');
-        container.innerHTML = '';
-        for (var cat in categoriesData) {
-            var btn = document.createElement('button');
-            btn.textContent = categoriesData[cat].icon + ' ' + cat;
-            btn.style.cssText = 'padding: 6px 10px; background: rgba(' + hexToRgb(categoriesData[cat].color) + ', 0.1); color: ' + categoriesData[cat].color + '; border: 1px solid ' + categoriesData[cat].color + '; border-radius: 6px; cursor: pointer; font-size: 0.75em; font-family: Cairo; transition: all 0.2s;';
-            btn.addEventListener('mouseover', function() { this.style.background = 'rgba(' + hexToRgb(this.style.color) + ', 0.2)'; });
-            btn.addEventListener('mouseout', function() { this.style.background = 'rgba(' + hexToRgb(this.style.color) + ', 0.1)'; });
-            btn.addEventListener('click', function() {
-                filterByCategory(cat);
-            });
-            container.appendChild(btn);
-        }
-    }
-    
-    // تحويل hex إلى rgb
-    function hexToRgb(hex) {
-        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? parseInt(result[1], 16) + ',' + parseInt(result[2], 16) + ',' + parseInt(result[3], 16) : '212,168,67';
-    }
-    
-    // تصفية حسب التصنيف
-    function filterByCategory(category) {
-        var filtered = quotes.filter(q => {
-            var cats = categorizeQuote(q.text);
-            return cats.includes(category);
-        });
-        if (filtered.length > 0) {
-            currentIndex = quotes.indexOf(filtered[0]);
-            showQuote(currentIndex);
-            showToast('تم تصفية الأقوال حسب: ' + category + ' (' + filtered.length + ')');
-        }
-    }
-    
-    // تحديث الإحصائيات
-    function updateStats() {
-        if (typeof userStats !== 'undefined') {
-            document.getElementById('quotesReadCount').textContent = userStats.quotesRead;
-            document.getElementById('favoritesCount').textContent = favorites.length;
-        }
-    }
-    
-    // اختيار الخط
-    document.getElementById('fontSelector').addEventListener('change', function() {
-        currentFont = this.value;
-        showToast('تم تغيير الخط إلى: ' + this.options[this.selectedIndex].text);
-    });
-    
-    // اختيار الملمس
-    document.getElementById('textureSelector').addEventListener('change', function() {
-        currentTexture = this.value;
-        showToast('تم تغيير الملمس إلى: ' + this.options[this.selectedIndex].text);
-    });
-    
-    // متغيرات عامة للخط والملمس
-    var currentFont = 'Amiri';
-    var currentTexture = 'بدون';
-    
-    // تهيئة الخيارات الجديدة عند تحميل الصفحة
-    window.addEventListener('load', function() {
-        setTimeout(function() {
-            initCategories();
-            updateStats();
-        }, 500);
-    });
-    
-    // تحديث الإحصائيات عند تغيير المفضلة
-    var originalToggleFavorite = toggleFavorite;
-    toggleFavorite = function(index) {
-        originalToggleFavorite(index);
-        updateStats();
-    };
+// دمج أشعار الديوان مع الأقوال الأصلية
+if (typeof extraQuotesData !== 'undefined' && Array.isArray(extraQuotesData)) {
+    quotes = quotes.concat(extraQuotesData);
+    console.log('✓ تم دمج أشعار الديوان (' + extraQuotesData.length + ' قول جديد)');
+}
 
-    // ========== تغيير الخط المباشر على النص ==========
-    
-    // تحديث دالة اختيار الخط لتطبيق التأثير فوراً
-    var fontSelectorElement = document.getElementById('fontSelector');
-    if (fontSelectorElement) {
-        fontSelectorElement.addEventListener('change', function() {
-            var selectedFont = this.value;
-            var fontFamily = '';
-            
-            // تحديد عائلة الخط
-            if (selectedFont === 'Amiri') fontFamily = "'Amiri', serif";
-            else if (selectedFont === 'Cairo') fontFamily = "'Cairo', sans-serif";
-            else if (selectedFont === 'Jomhuria') fontFamily = "'Jomhuria', cursive";
-            else if (selectedFont === 'Tajawal') fontFamily = "'Tajawal', sans-serif";
-            
-            // تطبيق الخط على النص المعروض
-            var quoteContent = document.getElementById('quoteContent');
-            if (quoteContent) {
-                quoteContent.style.fontFamily = fontFamily;
-            }
-            
-            // تطبيق الخط على جميع الأقوال في القائمة
-            var quoteItems = document.querySelectorAll('.quote-item');
-            quoteItems.forEach(function(item) {
-                item.style.fontFamily = fontFamily;
-            });
-            
-            // حفظ اختيار الخط
-            localStorage.setItem('selectedFont', selectedFont);
-            showToast('✓ تم تغيير الخط إلى: ' + this.options[this.selectedIndex].text);
+// ========== نظام اختيار خط الحفظ ==========
+var selectedFontForSave = localStorage.getItem('selectedFontForSave') || 'amiri';
+
+var fontFamilyMap = {
+    'amiri': "'Amiri', serif",
+    'cairo': "'Cairo', sans-serif",
+    'thmanyah_serif': "'ThmanyahSerif', serif",
+    'thmanyah_display': "'ThmanyahDisplay', serif",
+    'thmanyah_sans': "'ThmanyahSans', sans-serif"
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    var fontForSaveSelect = document.getElementById('fontForSave');
+    if (fontForSaveSelect) {
+        fontForSaveSelect.value = selectedFontForSave;
+        fontForSaveSelect.addEventListener('change', function() {
+            selectedFontForSave = this.value;
+            localStorage.setItem('selectedFontForSave', selectedFontForSave);
         });
     }
-    
-    // تطبيق الخط المحفوظ عند تحميل الصفحة
-    window.addEventListener('load', function() {
-        var savedFont = localStorage.getItem('selectedFont') || 'Amiri';
-        var fontSelectorElement = document.getElementById('fontSelector');
-        if (fontSelectorElement) {
-            fontSelectorElement.value = savedFont;
-            fontSelectorElement.dispatchEvent(new Event('change'));
-        }
-    });
+});

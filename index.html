@@ -4,12 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>أقوال الإمام علي (ع)</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#d4a843">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="أمام آل">
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&family=Jomhuria:wght@400;700&family=Tajawal:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -397,7 +392,14 @@
             .btn { font-size: 0.7em; padding: 8px 10px; min-width: 60px; }
             .bg-grid { grid-template-columns: repeat(2, 1fr); }
         }
-    </style>
+    
+    @font-face { font-family: 'ThmanyahSans'; src: url('fonts/thmanyahsans12_regular.otf'); }
+    @font-face { font-family: 'ThmanyahSerif'; src: url('fonts/thmanyahseriftext12_regular.otf'); }
+    @font-face { font-family: 'ThmanyahDisplay'; src: url('fonts/thmanyahserifdisplay12_regular.otf'); }
+    
+    .quote-text { font-family: 'ThmanyahSerif', serif !important; }
+    .quote-mark { font-family: 'Amiri', serif !important; color: #d4a843; font-size: 1.2em; }
+</style>
 </head>
 <body>
     <canvas id="particlesCanvas"></canvas>
@@ -408,9 +410,9 @@
         </header>
         <div class="quote-card" id="quoteCard">
             <div class="quote-text">
-                <span class="quote-mark">&#xFD3F;</span>
+                <span class="quote-mark">﴿</span>
                 <span id="quoteContent">جارٍ التحميل...</span>
-                <span class="quote-mark">&#xFD3E;</span>
+                <span class="quote-mark">﴾</span>
             </div>
         </div>
         <div class="controls">
@@ -419,7 +421,7 @@
             <button id="shareBtn" class="btn btn-share">مشاركة</button>
             <button id="allQuotesBtn" class="btn btn-info">جميع الأقوال</button>
             <button id="aboutBtn" class="btn btn-secondary">حول</button>
-            <button id="settingsBtn" class="btn btn-settings" title="الخيارات المتقدمة">⚙️</button>
+            <button id="settingsBtn" class="btn btn-settings">⚙️</button>
         </div>
         <div class="navigation">
             <button id="prevBtn" class="nav-btn">السابق</button>
@@ -514,6 +516,21 @@
                     <option value="60">دقيقة</option>
                 </select>
             </div>
+            
+            <div class="settings-group">
+                <label>خط حفظ الصورة</label>
+                <select id="fontForSave">
+                    <optgroup label="خطوط ثمانية">
+                        <option value="thmanyah_serif">ثمانية نص</option>
+                        <option value="thmanyah_display">ثمانية عرض</option>
+                        <option value="thmanyah_sans">ثمانية سنس</option>
+                    </optgroup>
+                    <optgroup label="خطوط كلاسيكية">
+                        <option value="amiri" selected>أميري</option>
+                        <option value="cairo">القاهرة</option>
+                    </optgroup>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -548,61 +565,6 @@
 
     <script src="quotes.js"></script>
     <script src="extra_quotes.js"></script>
-    <script src="extensions.js"></script>
-    
-    
-    
     <script src="app.js"></script>
 </body>
 </html>
-
-    <script>
-        // تسجيل Service Worker للعمل بدون إنترنت
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js').then(reg => {
-                console.log('✓ Service Worker تم تسجيله بنجاح');
-            }).catch(err => {
-                console.log('Service Worker فشل التسجيل:', err);
-            });
-        }
-    </script>
-
-    <!-- قسم الخيارات الجديدة -->
-    <div id="featuresSection" style="display:none; margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(212,168,67,0.1);">
-        <!-- حكمة اليوم -->
-        <button id="dailyWisdomBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px; background: rgba(255,215,0,0.15); color: #ffd700; border: 1px solid rgba(255,215,0,0.3);">📅 حكمة اليوم</button>
-        
-        <!-- التصنيفات -->
-        <div style="margin-bottom: 15px;">
-            <p style="color: #d4a843; font-size: 0.9em; margin-bottom: 8px; font-weight: bold;">📂 التصنيفات:</p>
-            <div id="categoriesContainer" style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 80px; overflow-y: auto;"></div>
-        </div>
-        
-        <!-- الخطوط -->
-        <div style="margin-bottom: 15px;">
-            <label style="color: #d4a843; font-size: 0.9em; font-weight: bold;">🔤 الخط:</label>
-            <select id="fontSelector" style="width: 100%; padding: 8px; margin-top: 5px; background: rgba(212,168,67,0.1); color: #d4a843; border: 1px solid rgba(212,168,67,0.2); border-radius: 8px; font-family: Cairo;">
-                <option value="Amiri">أميري (كلاسيكي)</option>
-                <option value="Cairo">القاهرة (حديث)</option>
-                <option value="Jomhuria">جزيرة (فني)</option>
-                <option value="Tajawal">تاجا (هندسي)</option>
-            </select>
-        </div>
-        
-        <!-- الأنسجة -->
-        <div style="margin-bottom: 15px;">
-            <label style="color: #d4a843; font-size: 0.9em; font-weight: bold;">🎨 الملمس:</label>
-            <select id="textureSelector" style="width: 100%; padding: 8px; margin-top: 5px; background: rgba(212,168,67,0.1); color: #d4a843; border: 1px solid rgba(212,168,67,0.2); border-radius: 8px; font-family: Cairo;">
-                <option value="بدون">بدون ملمس</option>
-                <option value="ورق">ملمس الورق القديم</option>
-                <option value="رخام">ملمس الرخام</option>
-                <option value="قماش">ملمس القماش</option>
-            </select>
-        </div>
-        
-        <!-- الإحصائيات -->
-        <div id="statsDisplay" style="background: rgba(212,168,67,0.05); padding: 12px; border-radius: 8px; text-align: center; color: #aaa; font-size: 0.85em; border: 1px solid rgba(212,168,67,0.1);">
-            <p style="margin: 5px 0;">📖 أقوال مقروءة: <span id="quotesReadCount" style="color: #d4a843; font-weight: bold;">0</span></p>
-            <p style="margin: 5px 0;">❤️ أقوال مفضلة: <span id="favoritesCount" style="color: #ff6b6b; font-weight: bold;">0</span></p>
-        </div>
-    </div>
