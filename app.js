@@ -65,20 +65,27 @@
     function init() {
         // تجهيز البيانات من الملفات الخارجية
         if (typeof quotesData !== 'undefined') {
-            allData.quotes = quotesData.map(q => ({ text: q.full || q.text, theme: q.theme || 'عام' }));
+            allData.quotes = quotesData.map(q => ({ 
+                text: q.full || q.text, 
+                theme: q.theme || 'حكمة',
+                original: q // الاحتفاظ بالبيانات الأصلية للصدر والعجز إذا وجدت
+            }));
         }
         
-        // دمج بيانات الديوان القديمة مع الاقتباسات
         if (typeof extraQuotesData !== 'undefined') {
             allData.quotes = allData.quotes.concat(extraQuotesData.map(q => ({ text: q.text, theme: 'من الديوان' })));
         }
 
         if (typeof poetryData !== 'undefined') {
-            allData.poetry = poetryData.map(p => ({ text: p.lines.join('\n'), theme: p.title || 'شعر' }));
+            allData.poetry = poetryData.map(p => ({ 
+                text: p.lines.join('\n'), 
+                theme: p.title || 'شعر علوي',
+                lines: p.lines // حفظ الأسطر منفصلة للعرض
+            }));
         }
 
         if (typeof biosData !== 'undefined') {
-            allData.bios = biosData.map(b => ({ text: b.quote, theme: b.title || 'نبذة' }));
+            allData.bios = biosData.map(b => ({ text: b.quote, theme: b.title || 'نبذة تعريفية' }));
         }
 
         // تعيين القسم الافتراضي (الاقتباسات)
@@ -268,21 +275,48 @@
     function showQuote(index) {
         if (quotes.length === 0) return;
         currentIndex = (index + quotes.length) % quotes.length;
-        var quote = quotes[currentIndex];
-        var el = document.getElementById('quoteContent');
+        var item = quotes[currentIndex];
         
-        el.textContent = '';
-        var i = 0;
-        function typeWriter() {
-            if (i < quote.text.length) {
-                el.textContent += quote.text.charAt(i);
-                i++;
-                setTimeout(typeWriter, 20);
+        var titleEl = document.getElementById('contentTitle');
+        var textEl = document.getElementById('quoteContent');
+        var poetryEl = document.getElementById('poetryContent');
+        
+        // تحديث العنوان
+        titleEl.textContent = item.theme;
+        
+        if (currentSection === 'poetry' && item.lines) {
+            // عرض الشعر بتنسيق صدر وعجز
+            textEl.style.display = 'none';
+            poetryEl.style.display = 'flex';
+            poetryEl.innerHTML = '';
+            
+            for (var i = 0; i < item.lines.length; i += 2) {
+                var lineDiv = document.createElement('div');
+                lineDiv.className = 'poetry-line';
+                
+                var sadr = item.lines[i] || '';
+                var ajuz = item.lines[i+1] || '';
+                
+                lineDiv.innerHTML = '<div class="poetry-part sadr">' + sadr + '</div>' + 
+                                    '<div class="poetry-part ajuz">' + ajuz + '</div>';
+                poetryEl.appendChild(lineDiv);
             }
+        } else if (currentSection === 'quotes' && item.original && item.original.first) {
+            // عرض الاقتباسات التي تحتوي على شطرين بتنسيق صدر وعجز
+            textEl.style.display = 'none';
+            poetryEl.style.display = 'flex';
+            poetryEl.innerHTML = '<div class="poetry-line">' + 
+                                 '<div class="poetry-part sadr">' + item.original.first + '</div>' + 
+                                 '<div class="poetry-part ajuz">' + item.original.second + '</div>' + 
+                                 '</div>';
+        } else {
+            // عرض النص العادي للاقتباسات والنبذات
+            poetryEl.style.display = 'none';
+            textEl.style.display = 'block';
+            textEl.textContent = item.text;
         }
-        typeWriter();
         
-        updateFontSize(quote.text.length);
+        updateFontSize(item.text.length);
         updateFavoriteButton();
     }
     
@@ -499,7 +533,6 @@
                 ctx.fillStyle = bg.colors[0]; ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
             
-            // إضافة تأثير الشرار إذا كان فيديو
             if (frame !== undefined) {
                 ctx.fillStyle = 'rgba(212, 168, 67, 0.3)';
                 for (var i = 0; i < 50; i++) {
@@ -517,32 +550,56 @@
             ctx.fillStyle = 'rgba(255,255,255,0.04)'; roundRect(ctx, cx, cy, cw, ch, 50); ctx.fill();
         }
         
+        // رسم العنوان في الأعلى
+        var titleSize = Math.floor(canvas.width * 0.03);
+        ctx.fillStyle = '#d4a843'; ctx.font = 'bold ' + titleSize + 'px "Cairo", sans-serif';
+        ctx.fillText(quote.theme, canvas.width / 2, cy + padding);
+
         ctx.fillStyle = format.transparent ? '#d4a843' : '#f5f0e8'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        var tl = quote.text.length, bfs = Math.floor(canvas.width * (tl <= 30 ? 0.06 : tl <= 50 ? 0.05 : tl <= 80 ? 0.04 : 0.035));
-        ctx.font = bfs + 'px "Amiri", serif';
         
-        var words = quote.text.split(' '), lines = [], cl = '';
-        for (var w = 0; w < words.length; w++) {
-            var tl2 = cl + ' ' + words[w], m = ctx.measureText(tl2);
-            if (m.width > cw - 60) { lines.push(cl); cl = words[w]; } else { cl = tl2; }
-        }
-        lines.push(cl);
+        var isPoetryMode = (currentSection === 'poetry' && quote.lines) || (currentSection === 'quotes' && quote.original && quote.original.first);
         
-        var lh = bfs * 1.5, th = lines.length * lh, sy = canvas.height / 2 - th / 2 + lh / 2;
-        
-        // رسم الأقواس الإسلامية
-        ctx.font = (bfs * 1.2) + 'px "Amiri", serif';
-        ctx.fillText('﴿', canvas.width / 2, sy - lh);
-        ctx.fillText('﴾', canvas.width / 2, sy + th);
-        
-        ctx.font = bfs + 'px "Amiri", serif';
-        for (var l = 0; l < lines.length; l++) {
-            ctx.fillText(lines[l].trim(), canvas.width / 2, sy + l * lh);
+        if (isPoetryMode) {
+            var pLines = quote.lines || [quote.original.first, quote.original.second];
+            var bfs = Math.floor(canvas.width * 0.04);
+            ctx.font = bfs + 'px "Amiri", serif';
+            var lh = bfs * 2, th = (pLines.length / 2) * lh, sy = canvas.height / 2 - th / 2;
+            
+            // رسم الأقواس
+            ctx.font = (bfs * 1.5) + 'px "Amiri", serif';
+            ctx.fillText('﴿', canvas.width / 2, sy - lh/2);
+            ctx.fillText('﴾', canvas.width / 2, sy + th + lh/2);
+            
+            ctx.font = bfs + 'px "Amiri", serif';
+            for (var l = 0; l < pLines.length; l += 2) {
+                var rowY = sy + (l / 2) * lh;
+                ctx.textAlign = 'right'; ctx.fillText(pLines[l], canvas.width / 2 - 20, rowY);
+                ctx.textAlign = 'left'; ctx.fillText(pLines[l+1] || '', canvas.width / 2 + 20, rowY);
+            }
+        } else {
+            var tl = quote.text.length, bfs = Math.floor(canvas.width * (tl <= 30 ? 0.06 : tl <= 50 ? 0.05 : tl <= 80 ? 0.04 : 0.035));
+            ctx.font = bfs + 'px "Amiri", serif';
+            var words = quote.text.split(' '), lines = [], cl = '';
+            for (var w = 0; w < words.length; w++) {
+                var tl2 = cl + ' ' + words[w], m = ctx.measureText(tl2);
+                if (m.width > cw - 60) { lines.push(cl); cl = words[w]; } else { cl = tl2; }
+            }
+            lines.push(cl);
+            var lh = bfs * 1.5, th = lines.length * lh, sy = canvas.height / 2 - th / 2 + lh / 2;
+            
+            ctx.font = (bfs * 1.2) + 'px "Amiri", serif';
+            ctx.fillText('﴿', canvas.width / 2, sy - lh);
+            ctx.fillText('﴾', canvas.width / 2, sy + th);
+            
+            ctx.font = bfs + 'px "Amiri", serif';
+            for (var l = 0; l < lines.length; l++) {
+                ctx.fillText(lines[l].trim(), canvas.width / 2, sy + l * lh);
+            }
         }
         
         if (!format.transparent) {
             var sigSize = Math.floor(canvas.width * 0.02);
-            ctx.fillStyle = 'rgba(255,255,255,0.2)'; 
+            ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.textAlign = 'center';
             ctx.font = sigSize + 'px Arial, sans-serif';
             ctx.fillText('insta : ne_7u', canvas.width / 2, canvas.height - padding);
         }

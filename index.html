@@ -88,8 +88,50 @@
             font-size: 1.5em;
             color: #f5f0e8;
             text-align: center;
-            line-height: 2;
+            line-height: 1.8;
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .content-title {
+            color: #d4a843;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            opacity: 0.8;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        .poetry-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .poetry-line {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            gap: 20px;
+            font-size: 0.9em;
+        }
+        
+        .poetry-part {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .poetry-part.sadr { text-align: right; }
+        .poetry-part.ajuz { text-align: left; }
+        
+        @media (max-width: 480px) {
+            .poetry-line { flex-direction: column; gap: 5px; }
+            .poetry-part.sadr, .poetry-part.ajuz { text-align: center; }
         }
         .quote-mark {
             color: #d4a843;
@@ -454,9 +496,16 @@
             <p class="subtitle">علي بن أبي طالب (عليه السلام)</p>
         </header>
         <div class="quote-card" id="quoteCard">
+            <!-- عنوان القسم أو القصيدة -->
+            <div id="contentTitle" class="content-title"></div>
+            
             <div class="quote-text">
                 <span class="quote-mark">﴿</span>
-                <span id="quoteContent">جارٍ التحميل...</span>
+                <!-- حاوية النص المرنة للأقوال والنبذات -->
+                <div id="quoteContent" class="quote-main-text">جارٍ التحميل...</div>
+                
+                <!-- حاوية الشعر المخصصة (صدر وعجز) -->
+                <div id="poetryContent" class="poetry-container" style="display: none;"></div>
                 <span class="quote-mark">﴾</span>
             </div>
         </div>
