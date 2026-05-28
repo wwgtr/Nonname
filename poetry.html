@@ -6,34 +6,48 @@
     <title>معدن الحكمة - ديوان الشعر</title>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        .vintage-paper {
+            background: #f4e4bc;
+            color: #2c1e11;
+            padding: 40px;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            position: relative;
+            background-image: url('https://www.transparenttextures.com/patterns/old-paper.png');
+        }
+        .vintage-paper .quote-mark { color: #8b4513; }
+        .vintage-paper .card-title { background: #8b4513; color: #f4e4bc; }
+    </style>
 </head>
 <body>
     <canvas id="particlesCanvas"></canvas>
     
+    <div class="fixed-nav">
+        <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="fixed-btn">▲</button>
+        <a href="index.html" class="fixed-btn">🏠</a>
+        <button onclick="window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'})" class="fixed-btn">▼</button>
+    </div>
+
     <div class="container">
         <header>
             <h1>ديوان الشعر</h1>
-            <p class="subtitle">POETRY OF IMAM ALI</p>
+            <p class="subtitle">POETRY COLLECTION</p>
         </header>
 
         <main>
-            <a href="index.html" class="back-btn-top">🏠 العودة للرئيسية</a>
-            <!-- واجهة القائمة -->
             <div id="listContainer">
-                <input type="text" id="searchInput" placeholder="ابحث في الديوان..." style="width:100%; padding:15px; background:rgba(255,255,255,0.03); border:1px solid rgba(212,168,67,0.2); border-radius:15px; color:#fff; margin-bottom:20px;">
+                <input type="text" id="searchInput" placeholder="ابحث في القصائد..." style="width:100%; padding:15px; background:rgba(255,255,255,0.03); border:1px solid rgba(212,168,67,0.2); border-radius:15px; color:#fff; margin-bottom:20px; font-family:'Cairo';">
                 <div id="itemsList" class="list-view"></div>
             </div>
 
-            <!-- واجهة العرض -->
             <div id="viewContainer" style="display:none;">
-                <button id="backToList" style="background:none; border:none; color:var(--gold); cursor:pointer; margin-bottom:15px; font-size:0.9em;">← العودة للقائمة</button>
+                <button id="backToList" style="background:none; border:none; color:var(--gold); cursor:pointer; margin-bottom:15px; font-size:0.9em; font-family:'Cairo';">← العودة للديوان</button>
                 
-                <div class="main-card" id="quoteCard">
-                    <div class="card-title" id="cardCategory">شعر</div>
+                <div class="main-card vintage-paper" id="quoteCard">
+                    <div class="card-title" id="cardCategory">قصيدة</div>
                     <div class="quote-wrapper">
                         <span class="quote-mark">﴿</span>
-                        <div id="quoteContent" class="quote-content" style="display:none;"></div>
                         <div id="poetryContent" class="poetry-box"></div>
                         <span class="quote-mark">﴾</span>
                     </div>
@@ -44,9 +58,7 @@
                         <button id="copyBtn" class="btn-circle">📋</button>
                         <button id="saveBtn" class="btn-circle">🖼️</button>
                         <button id="pdfBtn" class="btn-circle">📄</button>
-                        <button id="shareBtn" class="btn-circle">🔗</button>
                     </div>
-
                     <div class="nav-arrows">
                         <button id="prevBtn" class="arrow-btn">◀</button>
                         <button id="nextBtn" class="arrow-btn">▶</button>
@@ -54,14 +66,12 @@
                 </div>
             </div>
 
-            <nav class="sections-nav" style="margin-top:30px;">
-                <a href="index.html" class="nav-item">الحكم</a>
+            <nav class="sections-nav">
+                <a href="index.html" class="nav-item">الاقتباسات</a>
                 <a href="poetry.html" class="nav-item active">الشعر</a>
-                <a href="quotes.html" class="nav-item">الاقتباسات</a>
                 <a href="bios.html" class="nav-item">النبذات</a>
                 <a href="about.html" class="nav-item">حول</a>
             </nav>
-            <a href="index.html" class="back-btn-bottom">🏠 العودة للرئيسية</a>
         </main>
 
         <footer class="footer-rights">
@@ -71,22 +81,19 @@
 
     <div id="saveModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" id="closeSave">&times;</span>
-            <h2 style="color:var(--gold); margin-bottom:20px; text-align:center;">تصدير الشعر</h2>
-            <div style="margin-bottom:20px;">
-                <label style="display:block; margin-bottom:10px; font-size:0.8em; opacity:0.7;">اختر القياس</label>
-                <select id="formatSelect" style="width:100%; padding:12px; background:#111; border:1px solid var(--gold); color:#fff; border-radius:10px;"></select>
-            </div>
-            <button id="confirmSave" style="width:100%; padding:15px; background:var(--gold); border:none; border-radius:15px; font-weight:bold; cursor:pointer;">تأكيد الحفظ</button>
+            <h2 style="color:var(--gold); margin-bottom:20px; text-align:center; font-family:'Cairo';">تصدير</h2>
+            <select id="formatSelect" style="width:100%; padding:12px; background:#111; border:1px solid var(--gold); color:#fff; border-radius:10px; margin-bottom:20px; font-family:'Cairo';"></select>
+            <button id="confirmSave" style="width:100%; padding:15px; background:var(--gold); border:none; border-radius:15px; font-weight:bold; cursor:pointer; font-family:'Cairo';">تأكيد</button>
+            <button id="closeSave" style="width:100%; padding:10px; background:none; border:none; color:#777; width:100%; margin-top:10px; cursor:pointer;">إلغاء</button>
         </div>
     </div>
 
     <canvas id="imageCanvas" style="display:none;"></canvas>
     <div id="toast" class="toast"></div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>window.currentSection = 'poetry';</script>
     <script src="poetry_data.js"></script>
-    <script src="extra_quotes.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

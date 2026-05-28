@@ -1,4 +1,4 @@
-var quotesData = [
+const quotesData = [
   {
     first: "إِذا النائِباتُ بَلَغنَ المَدى",
     second: "وَكادَت تَذوبُ لَهُنَّ المُهَج",
