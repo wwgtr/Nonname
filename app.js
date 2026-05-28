@@ -3,96 +3,64 @@
     
     var currentIndex = 0;
     var quotes = []; 
-    var fontSizeMultiplier = 1;
-    var selectedBg = 0;
     var selectedFormat = 'hd';
     
-    var backgrounds = [
-        { name: 'ذهبي كلاسيك', colors: ['#0a0505','#1a0a05','#0a0510','#000000'], type: 'gradient' },
-        { name: 'أزرق ليلي', colors: ['#050a15','#0a1530','#051020','#000510'], type: 'gradient' },
-        { name: 'أخضر زمردي', colors: ['#050a08','#0a1a10','#051008','#000a05'], type: 'gradient' },
-        { name: 'بنفسجي ملكي', colors: ['#0a0515','#150a25','#0a0510','#05000a'], type: 'gradient' },
-        { name: 'أحمر غامق', colors: ['#150505','#250a0a','#100505','#0a0000'], type: 'gradient' },
-        { name: 'ذهبي وردي', colors: ['#1a0a10','#2a1518','#150a0e','#0a0508'], type: 'gradient' },
-        { name: 'شطرنج ذهبي', colors: ['#0a0505','#1a0a05'], type: 'checkerboard' },
-        { name: 'نقاط ذهبية', colors: ['#0a0505','#d4a843'], type: 'dots' },
-        { name: 'شبكة ذهبية', colors: ['#0a0505','#d4a843'], type: 'grid' }
-    ];
-    
     var downloadFormats = [
-        { id: 'hd', name: 'صورة عالية الدقة', width: 2160, height: 3840 },
-        { id: 'story', name: 'ستوري', width: 1080, height: 1920 },
-        { id: 'instagram', name: 'منشور انستقرام', width: 1080, height: 1080 },
+        { id: 'hd', name: 'صورة ملكية (4K)', width: 2160, height: 3840 },
+        { id: 'story', name: 'ستوري فخم', width: 1080, height: 1920 },
+        { id: 'instagram', name: 'منشور مربع', width: 1080, height: 1080 },
         { id: 'sticker', name: 'ملصق شفاف', width: 1024, height: 1024, transparent: true },
-        { id: 'video_story', name: 'فيديو ستوري (15 ثانية)', width: 1080, height: 1920, isVideo: true }
+        { id: 'video', name: 'فيديو سينمائي (15 ث)', width: 1080, height: 1920, isVideo: true }
     ];
     
     function init() {
         var section = window.currentSection || 'home';
         
-        // تحميل البيانات بناءً على القسم مع فصل تام للشعر عن الحكم
+        // تحميل البيانات
         if (section === 'home') {
-            // الصفحة الرئيسية: حكم وأقوال فقط
             if (typeof quotesData !== 'undefined') {
                 quotes = quotesData.map(q => ({ text: q.full || q.text, theme: q.theme || 'حكمة', original: q }));
             }
-        } else if (section === 'quotes') {
-            // قسم الاقتباسات المضافة حديثاً
-            if (typeof quotesData !== 'undefined') {
-                quotes = quotesData.map(q => ({ text: q.full || q.text, theme: q.theme || 'حكمة', original: q }));
-            }
+            shuffleQuote();
         } else if (section === 'poetry') {
-            // قسم الشعر: يجمع القصائد والديوان (extraQuotesData)
             if (typeof poetryData !== 'undefined') {
                 quotes = poetryData.map(p => ({ text: p.lines.join('\n'), theme: p.title || 'شعر علوي', lines: p.lines }));
             }
-            // إضافة أشعار الديوان (التي كانت في extra_quotes) إلى قسم الشعر حصراً
             if (typeof extraQuotesData !== 'undefined') {
-                var extraPoetry = extraQuotesData.map(q => {
-                    // تحويل نصوص الديوان إلى تنسيق صدر وعجز إذا أمكن
+                var extra = extraQuotesData.map(q => {
                     var parts = q.text.split('...');
                     if (parts.length < 2) parts = q.text.split('،');
-                    return { 
-                        text: q.text, 
-                        theme: 'من الديوان', 
-                        lines: parts.length >= 2 ? [parts[0].trim(), parts[1].trim()] : [q.text, ''] 
-                    };
+                    return { text: q.text, theme: 'من الديوان', lines: parts.length >= 2 ? [parts[0].trim(), parts[1].trim()] : [q.text, ''] };
                 });
-                quotes = quotes.concat(extraPoetry);
+                quotes = quotes.concat(extra);
             }
+            renderItemsList(quotes);
+        } else if (section === 'quotes') {
+            if (typeof quotesData !== 'undefined') {
+                quotes = quotesData.map(q => ({ text: q.full || q.text, theme: q.theme || 'اقتباس', original: q }));
+            }
+            renderItemsList(quotes);
         } else if (section === 'bios') {
-            // قسم النبذات
             if (typeof biosData !== 'undefined') {
-                quotes = biosData.map(b => ({ text: b.quote, theme: b.title || 'نبذة تعريفية' }));
+                quotes = biosData.map(b => ({ text: b.quote, theme: b.title || 'نبذة' }));
             }
-        }
-
-        // منطق العرض الأولي
-        if (section === 'home') {
-            shuffleQuote();
-        } else {
             renderItemsList(quotes);
         }
 
         initParticles();
-        initBgGrid();
         initFormatSelector();
         
-        // ربط الأحداث
+        // الأحداث
         document.getElementById('backToList')?.addEventListener('click', backToList);
         document.getElementById('prevBtn')?.addEventListener('click', prevQuote);
         document.getElementById('nextBtn')?.addEventListener('click', nextQuote);
-        document.getElementById('saveBtn')?.addEventListener('click', openSaveModal);
-        document.getElementById('shareBtn')?.addEventListener('click', shareQuote);
-        document.getElementById('copyBtn')?.addEventListener('click', copyToClipboard);
-        document.getElementById('pdfBtn')?.addEventListener('click', saveAsPDF);
-        document.getElementById('settingsBtn')?.addEventListener('click', openSettings);
-        document.getElementById('closeSettings')?.addEventListener('click', closeSettings);
-        document.getElementById('closeSave')?.addEventListener('click', closeSaveModal);
+        document.getElementById('saveBtn')?.addEventListener('click', () => document.getElementById('saveModal').classList.add('active'));
+        document.getElementById('closeSave')?.addEventListener('click', () => document.getElementById('saveModal').classList.remove('active'));
         document.getElementById('confirmSave')?.addEventListener('click', handleSaveAction);
+        document.getElementById('copyBtn')?.addEventListener('click', copyToClipboard);
+        document.getElementById('shareBtn')?.addEventListener('click', shareQuote);
+        document.getElementById('pdfBtn')?.addEventListener('click', saveAsPDF);
         document.getElementById('searchInput')?.addEventListener('input', searchItems);
-        document.getElementById('fontSizeSelect')?.addEventListener('change', changeFontSize);
-        document.getElementById('darkModeToggle')?.addEventListener('click', toggleDarkMode);
     }
 
     function renderItemsList(data) {
@@ -101,8 +69,8 @@
         list.innerHTML = '';
         data.forEach((item, idx) => {
             var div = document.createElement('div');
-            div.className = 'list-item';
-            div.innerHTML = '<div class="item-title">' + item.theme + '</div><div class="item-meta">عرض ←</div>';
+            div.className = 'list-card';
+            div.innerHTML = '<div class="title">' + item.theme + '</div><div class="icon">✨</div>';
             div.onclick = () => showDetail(idx);
             list.appendChild(div);
         });
@@ -118,17 +86,16 @@
         currentIndex = index;
         var item = quotes[currentIndex];
         
-        document.getElementById('listContainer')?.classList.add('hidden');
-        document.getElementById('viewContainer')?.classList.add('active');
+        document.getElementById('listContainer')?.style.setProperty('display', 'none');
+        document.getElementById('viewContainer')?.style.setProperty('display', 'block');
         
-        var titleEl = document.getElementById('contentTitle');
+        var titleEl = document.getElementById('cardCategory');
         var textEl = document.getElementById('quoteContent');
         var poetryEl = document.getElementById('poetryContent');
         
         if (titleEl) titleEl.textContent = item.theme;
         
-        // عرض الشعر (سواء كان قصيدة أو من الديوان) بتنسيق صدر وعجز
-        if (window.currentSection === 'poetry' && item.lines) {
+        if (item.lines) {
             textEl.style.display = 'none';
             poetryEl.style.display = 'flex';
             poetryEl.innerHTML = '';
@@ -139,26 +106,16 @@
                                     '<div class="poetry-part ajuz">' + (item.lines[i+1] || '') + '</div>';
                 poetryEl.appendChild(lineDiv);
             }
-        } else if (window.currentSection === 'home' && item.original && item.original.first) {
-            // إذا كانت الحكمة في الصفحة الرئيسية لها شطرين (مثل بعض الحكم)، تعرضها بشكل منسق
-            textEl.style.display = 'none';
-            poetryEl.style.display = 'flex';
-            poetryEl.innerHTML = '<div class="poetry-line">' + 
-                                 '<div class="poetry-part sadr">' + item.original.first + '</div>' + 
-                                 '<div class="poetry-part ajuz">' + item.original.second + '</div>' + 
-                                 '</div>';
         } else {
-            if (poetryEl) poetryEl.style.display = 'none';
+            poetryEl.style.display = 'none';
             textEl.style.display = 'block';
             textEl.textContent = item.text;
         }
-        
-        updateFontSize(item.text.length);
     }
 
     function backToList() {
-        document.getElementById('listContainer').classList.remove('hidden');
-        document.getElementById('viewContainer').classList.remove('active');
+        document.getElementById('listContainer').style.display = 'block';
+        document.getElementById('viewContainer').style.display = 'none';
     }
 
     function shuffleQuote() {
@@ -168,12 +125,12 @@
         }
     }
 
-    function prevQuote() { showDetail((currentIndex - 1 + quotes.length) % quotes.length); }
-    function nextQuote() { showDetail((currentIndex + 1) % quotes.length); }
+    function prevQuote() { currentIndex = (currentIndex - 1 + quotes.length) % quotes.length; showDetail(currentIndex); }
+    function nextQuote() { currentIndex = (currentIndex + 1) % quotes.length; showDetail(currentIndex); }
     
     function copyToClipboard() {
-        var text = '﴿ ' + quotes[currentIndex].text + ' ﴾\n\n— الإمام علي (ع)';
-        navigator.clipboard.writeText(text).then(() => showToast('تم نسخ النص بنجاح'));
+        var text = '﴿ ' + quotes[currentIndex].text + ' ﴾\n\n— الإمام علي (ع)\nحقوق: insta: ne_7u';
+        navigator.clipboard.writeText(text).then(() => showToast('تم نسخ الحكمة'));
     }
 
     function shareQuote() {
@@ -181,143 +138,83 @@
         if (navigator.share) navigator.share({ text: text }); else copyToClipboard();
     }
 
-    function saveAsPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const item = quotes[currentIndex];
-        
-        doc.setFont('Amiri', 'bold');
-        doc.setTextColor(139, 69, 19);
-        doc.text(item.theme, 105, 30, { align: 'center' });
-        
-        doc.setFont('Amiri', 'normal');
-        doc.setTextColor(61, 43, 31);
-        
-        if (item.lines) {
-            item.lines.forEach((line, i) => {
-                doc.text(line, 105, 50 + (i * 10), { align: 'center' });
-            });
-        } else {
-            const splitText = doc.splitTextToSize(item.text, 160);
-            doc.text(splitText, 105, 50, { align: 'center' });
-        }
-        
-        doc.setFontSize(10);
-        doc.text('insta : ne_7u', 105, 280, { align: 'center' });
-        doc.save('amam_ali_poetry.pdf');
-        showToast('تم تصدير ملف PDF');
-    }
-
-    function updateFontSize(length) {
-        var baseSize = 1.5;
-        if (length > 100) baseSize = 1.2;
-        if (length > 200) baseSize = 1.0;
-        var el = document.getElementById('quoteContent') || document.getElementById('poetryContent');
-        if (el) el.style.fontSize = (baseSize * fontSizeMultiplier) + 'em';
-    }
-    
-    function changeFontSize() {
-        var val = document.getElementById('fontSizeSelect').value;
-        fontSizeMultiplier = (val === 'small') ? 0.8 : (val === 'large') ? 1.3 : 1;
-        updateFontSize(quotes[currentIndex].text.length);
-    }
-    
-    function toggleDarkMode() {
-        document.getElementById('mainContainer').classList.toggle('dark-mode');
-        document.getElementById('darkModeTrack').classList.toggle('active');
-    }
-    
-    function openSettings() { document.getElementById('settingsModal').classList.add('active'); }
-    function closeSettings() { document.getElementById('settingsModal').classList.remove('active'); }
-    function openSaveModal() { document.getElementById('saveModal').classList.add('active'); }
-    function closeSaveModal() { document.getElementById('saveModal').classList.remove('active'); }
-    
     function handleSaveAction() {
         var format = downloadFormats.find(f => f.id === selectedFormat);
-        if (format && format.isVideo) saveAsVideo(); else saveAsImage();
+        if (format.isVideo) saveAsVideo(); else saveAsImage();
     }
-    
-    function drawQuoteOnCanvas(ctx, canvas, quote, format, frame) {
-        var bg = backgrounds[selectedBg];
-        var padding = canvas.width * 0.08;
-        
-        if (format.transparent) ctx.clearRect(0, 0, canvas.width, canvas.height);
-        else {
-            if (bg.type === 'gradient') {
-                var grd = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-                bg.colors.forEach((c, i) => grd.addColorStop(i / (bg.colors.length - 1), c));
-                ctx.fillStyle = grd;
-            } else ctx.fillStyle = bg.colors[0];
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-        
-        ctx.fillStyle = '#d4a843'; ctx.textAlign = 'center';
-        ctx.font = 'bold ' + (canvas.width * 0.04) + 'px "Cairo"';
-        ctx.fillText(quote.theme, canvas.width/2, padding*2);
 
-        var isPoetry = (window.currentSection === 'poetry' && quote.lines) || (window.currentSection === 'home' && quote.original && quote.original.first);
-        ctx.fillStyle = format.transparent ? '#d4a843' : '#f5f0e8';
+    function drawOnCanvas(ctx, canvas, quote, format) {
+        // خلفية ملكية
+        if (format.transparent) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        } else {
+            var grd = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            grd.addColorStop(0, '#0a1515'); grd.addColorStop(1, '#050505');
+            ctx.fillStyle = grd; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // إطار ذهبي خفيف
+            ctx.strokeStyle = 'rgba(212, 168, 67, 0.1)'; ctx.lineWidth = canvas.width * 0.02;
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        }
+
+        ctx.textAlign = 'center';
         
-        if (isPoetry) {
-            var pLines = quote.lines || [quote.original.first, quote.original.second];
-            var bfs = Math.floor(canvas.width * 0.045);
-            ctx.font = bfs + 'px "Amiri"';
-            var lh = bfs * 2;
-            var sy = canvas.height/2 - (pLines.length/4)*lh;
-            
-            ctx.font = (bfs*1.5) + 'px "Amiri"';
-            ctx.textAlign = 'right'; ctx.fillText('﴿', canvas.width/2 - canvas.width*0.4, canvas.height/2);
-            ctx.textAlign = 'left'; ctx.fillText('﴾', canvas.width/2 + canvas.width*0.4, canvas.height/2);
-            
-            ctx.font = bfs + 'px "Amiri"';
-            for (var l=0; l<pLines.length; l+=2) {
-                ctx.textAlign = 'right'; ctx.fillText(pLines[l], canvas.width/2 - 20, sy + (l/2)*lh);
-                ctx.textAlign = 'left'; ctx.fillText(pLines[l+1] || '', canvas.width/2 + 20, sy + (l/2)*lh);
+        // العنوان
+        ctx.fillStyle = '#d4a843';
+        ctx.font = 'bold ' + (canvas.width * 0.04) + 'px "Cairo"';
+        ctx.fillText(quote.theme, canvas.width/2, canvas.height * 0.15);
+
+        // الأقواس أفقياً
+        ctx.font = (canvas.width * 0.08) + 'px "Amiri"';
+        ctx.fillText('﴿', canvas.width * 0.1, canvas.height / 2);
+        ctx.fillText('﴾', canvas.width * 0.9, canvas.height / 2);
+
+        // النص
+        ctx.fillStyle = format.transparent ? '#d4a843' : '#f5f0e8';
+        if (quote.lines) {
+            var bfs = canvas.width * 0.045; ctx.font = bfs + 'px "Amiri"';
+            var lh = bfs * 2; var sy = canvas.height/2 - (quote.lines.length/4)*lh;
+            for (var l=0; l<quote.lines.length; l+=2) {
+                ctx.textAlign = 'right'; ctx.fillText(quote.lines[l], canvas.width/2 - 20, sy + (l/2)*lh);
+                ctx.textAlign = 'left'; ctx.fillText(quote.lines[l+1] || '', canvas.width/2 + 20, sy + (l/2)*lh);
             }
         } else {
-            var bfs = Math.floor(canvas.width * 0.05);
-            ctx.font = bfs + 'px "Amiri"';
+            var bfs = canvas.width * 0.06; ctx.font = bfs + 'px "Amiri"';
             var words = quote.text.split(' '), lines = [], cl = '';
             words.forEach(w => {
-                var m = ctx.measureText(cl + ' ' + w);
-                if (m.width > canvas.width - padding*3) { lines.push(cl); cl = w; } else cl += ' ' + w;
+                if (ctx.measureText(cl + ' ' + w).width > canvas.width * 0.7) { lines.push(cl); cl = w; } else cl += ' ' + w;
             });
             lines.push(cl);
             var sy = canvas.height/2 - (lines.length/2)*bfs*1.5;
-            
-            ctx.font = (bfs*1.5) + 'px "Amiri"';
-            ctx.textAlign = 'right'; ctx.fillText('﴿', canvas.width/2 - canvas.width*0.4, canvas.height/2);
-            ctx.textAlign = 'left'; ctx.fillText('﴾', canvas.width/2 + canvas.width*0.4, canvas.height/2);
-            
-            ctx.font = bfs + 'px "Amiri"';
             ctx.textAlign = 'center';
             lines.forEach((l, i) => ctx.fillText(l.trim(), canvas.width/2, sy + i*bfs*1.5));
         }
-        
+
+        // الحقوق
         if (!format.transparent) {
-            ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = (canvas.width*0.025)+'px Arial';
-            ctx.textAlign = 'center'; ctx.fillText('insta : ne_7u', canvas.width/2, canvas.height-padding);
+            ctx.fillStyle = 'rgba(212, 168, 67, 0.4)';
+            ctx.font = (canvas.width * 0.03) + 'px "Cairo"';
+            ctx.fillText('INSTA : NE_7U | TELEGRAM : NE_7U', canvas.width/2, canvas.height * 0.9);
         }
     }
-    
+
     function saveAsImage() {
-        var format = downloadFormats.find(f => f.id === selectedFormat) || downloadFormats[0];
+        var format = downloadFormats.find(f => f.id === selectedFormat);
         var canvas = document.getElementById('imageCanvas');
         var ctx = canvas.getContext('2d');
         canvas.width = format.width; canvas.height = format.height;
-        drawQuoteOnCanvas(ctx, canvas, quotes[currentIndex], format);
+        drawOnCanvas(ctx, canvas, quotes[currentIndex], format);
         var link = document.createElement('a');
-        link.download = 'amam_ali.png'; link.href = canvas.toDataURL(); link.click();
-        showToast('تم حفظ الصورة');
+        link.download = 'wisdom_ne7u.png'; link.href = canvas.toDataURL(); link.click();
+        showToast('تم الحفظ بنجاح');
     }
 
     function saveAsVideo() {
-        showToast('جاري تحضير الفيديو (15 ثانية)...');
-        var format = downloadFormats.find(f => f.id === 'video_story');
+        showToast('جاري إنشاء الفيديو السينمائي...');
+        var format = downloadFormats.find(f => f.id === 'video');
         var canvas = document.getElementById('imageCanvas');
         var ctx = canvas.getContext('2d');
         canvas.width = format.width; canvas.height = format.height;
-        var audio = new Audio('audio.ogg');
         var stream = canvas.captureStream(30);
         var recorder = new MediaRecorder(stream);
         var chunks = [];
@@ -325,52 +222,54 @@
         recorder.onstop = () => {
             var blob = new Blob(chunks, { type: 'video/webm' });
             var link = document.createElement('a');
-            link.href = URL.createObjectURL(blob); link.download = 'amam_ali_video.webm'; link.click();
+            link.href = URL.createObjectURL(blob); link.download = 'wisdom_video.webm'; link.click();
             showToast('تم تصدير الفيديو');
         };
-        recorder.start(); audio.play();
+        recorder.start();
         var frame = 0;
         function record() {
-            if (frame < 450) {
-                drawQuoteOnCanvas(ctx, canvas, quotes[currentIndex], format, frame);
+            if (frame < 450) { // 15s
+                drawOnCanvas(ctx, canvas, quotes[currentIndex], format);
+                // إضافة تأثير لمعان متحرك
+                ctx.fillStyle = 'rgba(212, 168, 67, ' + (Math.sin(frame/10)*0.1 + 0.1) + ')';
+                ctx.fillRect(0,0,canvas.width,canvas.height);
                 frame++; requestAnimationFrame(record);
-            } else { recorder.stop(); audio.pause(); }
+            } else { recorder.stop(); }
         }
         record();
     }
 
+    function saveAsPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        doc.setFillColor(10, 10, 10); doc.rect(0, 0, 210, 297, 'F');
+        doc.setTextColor(212, 168, 67); doc.setFontSize(22);
+        doc.text(quotes[currentIndex].theme, 105, 40, { align: 'center' });
+        doc.setTextColor(245, 240, 232); doc.setFontSize(16);
+        var lines = doc.splitTextToSize(quotes[currentIndex].text, 160);
+        doc.text(lines, 105, 100, { align: 'center' });
+        doc.setTextColor(212, 168, 67); doc.setFontSize(10);
+        doc.text('INSTA : NE_7U', 105, 280, { align: 'center' });
+        doc.save('wisdom_ne7u.pdf');
+        showToast('تم تصدير PDF');
+    }
+
     function initParticles() {
         var canvas = document.getElementById('particlesCanvas');
-        if (!canvas) return;
         var ctx = canvas.getContext('2d');
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         resize(); window.onresize = resize;
         var ps = [];
-        for(var i=0; i<60; i++) ps.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, s:Math.random()*2, sy:-Math.random()*0.5-0.2});
+        for(var i=0; i<80; i++) ps.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, s:Math.random()*1.5, sy:-Math.random()*0.3-0.1, o:Math.random()});
         function anim() {
             ctx.clearRect(0,0,canvas.width,canvas.height);
             ps.forEach(p => {
                 p.y += p.sy; if(p.y < -10) p.y = canvas.height+10;
-                ctx.fillStyle = 'rgba(212,168,67,0.4)'; ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2); ctx.fill();
+                ctx.fillStyle = 'rgba(212,168,67,'+p.o+')'; ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2); ctx.fill();
             });
             requestAnimationFrame(anim);
         }
         anim();
-    }
-
-    function initBgGrid() {
-        var grid = document.getElementById('bgGrid');
-        if (!grid) return;
-        backgrounds.forEach((bg, i) => {
-            var div = document.createElement('div');
-            div.className = 'bg-grid-item' + (i===0?' selected':'');
-            div.innerHTML = '<div class="preview" style="background:'+(bg.type==='gradient'?'linear-gradient(135deg,'+bg.colors.join(',')+')':bg.colors[0])+'"></div><div class="name">'+bg.name+'</div>';
-            div.onclick = () => {
-                document.querySelectorAll('.bg-grid-item').forEach(el => el.classList.remove('selected'));
-                div.classList.add('selected'); selectedBg = i;
-            };
-            grid.appendChild(div);
-        });
     }
 
     function initFormatSelector() {
@@ -389,5 +288,5 @@
         setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    init();
 })();

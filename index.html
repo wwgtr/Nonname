@@ -3,82 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>أقوال الإمام علي - الحكم والأقوال</title>
+    <title>معدن الحكمة - أمير المؤمنين</title>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <canvas id="particlesCanvas"></canvas>
-    <div class="container" id="mainContainer">
+    
+    <div class="container">
         <header>
-            <h1>أقوال الإمام علي</h1>
-            <p class="subtitle">علي بن أبي طالب (عليه السلام)</p>
+            <h1>معدن الحكمة</h1>
+            <p class="subtitle">AL-IMAM ALI BIN ABI TALIB</p>
         </header>
-        
-        <div class="quote-card" id="quoteCard">
-            <div id="contentTitle" class="content-title">حكمة</div>
-            <div class="quote-text">
-                <span class="quote-mark">﴿</span>
-                <div class="quote-content-wrapper">
-                    <div id="quoteContent" class="quote-main-text">جارٍ التحميل...</div>
-                    <div id="poetryContent" class="poetry-container" style="display: none;"></div>
+
+        <main>
+            <div class="main-card" id="quoteCard">
+                <div class="card-title" id="cardCategory">حكمة</div>
+                <div class="quote-wrapper">
+                    <span class="quote-mark">﴿</span>
+                    <div id="quoteContent" class="quote-content">جارٍ التحميل...</div>
+                    <div id="poetryContent" class="poetry-box" style="display: none;"></div>
+                    <span class="quote-mark">﴾</span>
                 </div>
-                <span class="quote-mark">﴾</span>
-            </div>
-        </div>
-
-        <div class="action-buttons">
-            <div class="controls">
-                <button id="copyBtn" class="btn btn-primary">نسخ النص</button>
-                <button id="saveBtn" class="btn btn-success">حفظ</button>
-                <button id="shareBtn" class="btn btn-share">مشاركة</button>
-                <button id="settingsBtn" class="btn btn-settings">⚙️</button>
             </div>
 
-            <div class="section-links-middle">
-                <a href="index.html" class="btn-mini active">الحكم والأقوال</a>
-                <a href="poetry.html" class="btn-mini">الشعر</a>
-                <a href="quotes.html" class="btn-mini">الاقتباسات</a>
-                <a href="bios.html" class="btn-mini">النبذات</a>
-            </div>
+            <div class="action-hub">
+                <div class="control-buttons">
+                    <button id="copyBtn" class="btn-circle" title="نسخ">📋</button>
+                    <button id="saveBtn" class="btn-circle" title="حفظ">🖼️</button>
+                    <button id="shareBtn" class="btn-circle" title="مشاركة">🔗</button>
+                    <button id="settingsBtn" class="btn-circle" title="إعدادات">⚙️</button>
+                </div>
 
-            <div class="navigation">
-                <button id="prevBtn" class="nav-btn">السابق</button>
-                <button id="nextBtn" class="nav-btn">التالي</button>
+                <nav class="sections-nav">
+                    <a href="index.html" class="nav-item active">الحكم</a>
+                    <a href="poetry.html" class="nav-item">الشعر</a>
+                    <a href="quotes.html" class="nav-item">الاقتباسات</a>
+                    <a href="bios.html" class="nav-item">النبذات</a>
+                </nav>
+
+                <div class="nav-arrows">
+                    <button id="prevBtn" class="arrow-btn">◀</button>
+                    <button id="nextBtn" class="arrow-btn">▶</button>
+                </div>
             </div>
-        </div>
+        </main>
+
+        <footer class="footer-rights">
+            <p>DESIGN BY <span>MANUS AI</span></p>
+            <p>INSTA : <span>NE_7U</span> | TELEGRAM : <span>NE_7U</span></p>
+        </footer>
     </div>
 
     <!-- Modals -->
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" id="closeSettings">&times;</span>
-            <h2>الإعدادات</h2>
-            <div class="settings-group">
-                <label>حجم الخط</label>
-                <select id="fontSizeSelect">
-                    <option value="small">صغير</option>
-                    <option value="medium" selected>متوسط</option>
-                    <option value="large">كبير</option>
-                </select>
-            </div>
-            <div class="toggle-switch" id="darkModeToggle">
-                <span>الوضع الداكن</span>
-                <div class="toggle-track" id="darkModeTrack"></div>
-            </div>
-        </div>
-    </div>
-
     <div id="saveModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" id="closeSave">&times;</span>
-            <h2>حفظ الصورة</h2>
-            <div class="settings-group">
-                <label>التنسيق</label>
-                <select id="formatSelect"></select>
+            <span class="close-modal" id="closeSave">&times;</span>
+            <h2 style="color:var(--gold); margin-bottom:20px; text-align:center;">تصدير العمل</h2>
+            <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:10px; font-size:0.8em; opacity:0.7;">اختر القياس</label>
+                <select id="formatSelect" style="width:100%; padding:12px; background:#111; border:1px solid var(--gold); color:#fff; border-radius:10px;"></select>
             </div>
-            <div class="bg-grid" id="bgGrid"></div>
-            <button id="confirmSave" class="save-btn-confirm">تأكيد الحفظ</button>
+            <button id="confirmSave" style="width:100%; padding:15px; background:var(--gold); border:none; border-radius:15px; font-weight:bold; cursor:pointer;">تأكيد الحفظ</button>
         </div>
     </div>
 
@@ -87,7 +73,6 @@
 
     <script>window.currentSection = 'home';</script>
     <script src="quotes_data.js"></script>
-    <script src="extra_quotes.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
