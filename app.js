@@ -30,19 +30,38 @@
     function init() {
         var section = window.currentSection || 'home';
         
-        // تحميل البيانات بناءً على القسم
-        if (section === 'home' || section === 'quotes') {
+        // تحميل البيانات بناءً على القسم مع فصل تام للشعر عن الحكم
+        if (section === 'home') {
+            // الصفحة الرئيسية: حكم وأقوال فقط
             if (typeof quotesData !== 'undefined') {
                 quotes = quotesData.map(q => ({ text: q.full || q.text, theme: q.theme || 'حكمة', original: q }));
             }
-            if (typeof extraQuotesData !== 'undefined') {
-                quotes = quotes.concat(extraQuotesData.map(q => ({ text: q.text, theme: 'من الديوان' })));
+        } else if (section === 'quotes') {
+            // قسم الاقتباسات المضافة حديثاً
+            if (typeof quotesData !== 'undefined') {
+                quotes = quotesData.map(q => ({ text: q.full || q.text, theme: q.theme || 'حكمة', original: q }));
             }
         } else if (section === 'poetry') {
+            // قسم الشعر: يجمع القصائد والديوان (extraQuotesData)
             if (typeof poetryData !== 'undefined') {
                 quotes = poetryData.map(p => ({ text: p.lines.join('\n'), theme: p.title || 'شعر علوي', lines: p.lines }));
             }
+            // إضافة أشعار الديوان (التي كانت في extra_quotes) إلى قسم الشعر حصراً
+            if (typeof extraQuotesData !== 'undefined') {
+                var extraPoetry = extraQuotesData.map(q => {
+                    // تحويل نصوص الديوان إلى تنسيق صدر وعجز إذا أمكن
+                    var parts = q.text.split('...');
+                    if (parts.length < 2) parts = q.text.split('،');
+                    return { 
+                        text: q.text, 
+                        theme: 'من الديوان', 
+                        lines: parts.length >= 2 ? [parts[0].trim(), parts[1].trim()] : [q.text, ''] 
+                    };
+                });
+                quotes = quotes.concat(extraPoetry);
+            }
         } else if (section === 'bios') {
+            // قسم النبذات
             if (typeof biosData !== 'undefined') {
                 quotes = biosData.map(b => ({ text: b.quote, theme: b.title || 'نبذة تعريفية' }));
             }
@@ -108,7 +127,8 @@
         
         if (titleEl) titleEl.textContent = item.theme;
         
-        if ((window.currentSection === 'poetry' || window.currentSection === 'home') && item.lines) {
+        // عرض الشعر (سواء كان قصيدة أو من الديوان) بتنسيق صدر وعجز
+        if (window.currentSection === 'poetry' && item.lines) {
             textEl.style.display = 'none';
             poetryEl.style.display = 'flex';
             poetryEl.innerHTML = '';
@@ -119,7 +139,8 @@
                                     '<div class="poetry-part ajuz">' + (item.lines[i+1] || '') + '</div>';
                 poetryEl.appendChild(lineDiv);
             }
-        } else if (item.original && item.original.first) {
+        } else if (window.currentSection === 'home' && item.original && item.original.first) {
+            // إذا كانت الحكمة في الصفحة الرئيسية لها شطرين (مثل بعض الحكم)، تعرضها بشكل منسق
             textEl.style.display = 'none';
             poetryEl.style.display = 'flex';
             poetryEl.innerHTML = '<div class="poetry-line">' + 
@@ -141,8 +162,10 @@
     }
 
     function shuffleQuote() {
-        currentIndex = Math.floor(Math.random() * quotes.length);
-        showDetail(currentIndex);
+        if (quotes.length > 0) {
+            currentIndex = Math.floor(Math.random() * quotes.length);
+            showDetail(currentIndex);
+        }
     }
 
     function prevQuote() { showDetail((currentIndex - 1 + quotes.length) % quotes.length); }
@@ -232,17 +255,16 @@
         ctx.font = 'bold ' + (canvas.width * 0.04) + 'px "Cairo"';
         ctx.fillText(quote.theme, canvas.width/2, padding*2);
 
-        var isPoetry = (window.currentSection === 'poetry' || window.currentSection === 'home') && quote.lines;
+        var isPoetry = (window.currentSection === 'poetry' && quote.lines) || (window.currentSection === 'home' && quote.original && quote.original.first);
         ctx.fillStyle = format.transparent ? '#d4a843' : '#f5f0e8';
         
         if (isPoetry) {
-            var pLines = quote.lines;
+            var pLines = quote.lines || [quote.original.first, quote.original.second];
             var bfs = Math.floor(canvas.width * 0.045);
             ctx.font = bfs + 'px "Amiri"';
             var lh = bfs * 2;
             var sy = canvas.height/2 - (pLines.length/4)*lh;
             
-            // رسم الأقواس أفقياً
             ctx.font = (bfs*1.5) + 'px "Amiri"';
             ctx.textAlign = 'right'; ctx.fillText('﴿', canvas.width/2 - canvas.width*0.4, canvas.height/2);
             ctx.textAlign = 'left'; ctx.fillText('﴾', canvas.width/2 + canvas.width*0.4, canvas.height/2);
@@ -309,7 +331,7 @@
         recorder.start(); audio.play();
         var frame = 0;
         function record() {
-            if (frame < 450) { // 15 seconds * 30 fps
+            if (frame < 450) {
                 drawQuoteOnCanvas(ctx, canvas, quotes[currentIndex], format, frame);
                 frame++; requestAnimationFrame(record);
             } else { recorder.stop(); audio.pause(); }
