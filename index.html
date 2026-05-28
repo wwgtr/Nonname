@@ -135,7 +135,47 @@
             justify-content: center;
             gap: 15px;
             padding: 0 5px;
+            margin-bottom: 20px;
         }
+        
+        .main-sections-nav {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(212,168,67,0.1);
+        }
+        
+        .section-btn {
+            flex: 1;
+            padding: 12px 5px;
+            border: 1px solid rgba(212,168,67,0.2);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+            color: rgba(255,255,255,0.6);
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .section-btn.active {
+            background: rgba(212,168,67,0.15);
+            color: #d4a843;
+            border-color: #d4a843;
+            font-weight: bold;
+        }
+        
+        .warning-icon {
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
         .nav-btn {
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.1);
@@ -432,6 +472,25 @@
             <button id="prevBtn" class="nav-btn">السابق</button>
             <button id="nextBtn" class="nav-btn">التالي</button>
         </div>
+
+        <!-- خيارات التنقل الرئيسية الثلاثة -->
+        <div class="main-sections-nav">
+            <button id="sectionQuotesBtn" class="section-btn active">الاقتباسات</button>
+            <button id="sectionPoetryBtn" class="section-btn">الشعر <span class="warning-icon" id="poetryWarningIcon">⚠️</span></button>
+            <button id="sectionBiosBtn" class="section-btn">النبذات</button>
+        </div>
+    </div>
+
+    <!-- نافذة تنبيه الشعر -->
+    <div id="poetryWarningModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closePoetryWarning">&times;</span>
+            <div style="text-align: center; padding: 20px;">
+                <span style="font-size: 3em; display: block; margin-bottom: 15px;">⚠️</span>
+                <p style="font-size: 1.1em; line-height: 1.6; color: #f5f0e8;">هذه الأشعار منسوبة للأمام علي عليه السلام، مدى صحتها غير معروف، أو إذا تم التلاعب بها.</p>
+                <button class="save-btn-confirm" style="margin-top: 20px;" id="confirmPoetryWarning">فهمت ذلك</button>
+            </div>
+        </div>
     </div>
 
     <div id="allQuotesModal" class="modal">
@@ -555,7 +614,9 @@
     <canvas id="imageCanvas" style="display:none;"></canvas>
     <div id="toast" class="toast"></div>
 
-    <script src="quotes.js"></script>
+    <script src="quotes_data.js"></script>
+    <script src="poetry_data.js"></script>
+    <script src="bios_data.js"></script>
     <script src="extra_quotes.js"></script>
     <script src="app.js"></script>
 </body>

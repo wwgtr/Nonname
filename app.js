@@ -2,8 +2,14 @@
     'use strict';
     
     var currentIndex = 0;
-    var quotes = [];
-    var shownQuotes = []; // لتتبع الأقوال التي ظهرت ومنع التكرار
+    var allData = {
+        quotes: [],
+        poetry: [],
+        bios: []
+    };
+    var currentSection = 'quotes';
+    var quotes = []; // المصفوفة الحالية النشطة
+    var shownQuotes = [];
     var favorites = JSON.parse(localStorage.getItem('amam_favorites') || '[]');
     var fontSizeMultiplier = 1;
     var selectedBg = 0;
@@ -57,17 +63,32 @@
     ];
     
     function init() {
-        if (typeof quotesData !== 'undefined' && quotesData.length > 0) {
-            quotes = quotesData;
-            shuffleQuote(); // البداية بقول عشوائي
-        } else {
-            document.getElementById('quoteContent').textContent = 'لا توجد أقوال متاحة';
+        // تجهيز البيانات من الملفات الخارجية
+        if (typeof quotesData !== 'undefined') {
+            allData.quotes = quotesData.map(q => ({ text: q.full || q.text, theme: q.theme || 'عام' }));
         }
+        
+        // دمج بيانات الديوان القديمة مع الاقتباسات
+        if (typeof extraQuotesData !== 'undefined') {
+            allData.quotes = allData.quotes.concat(extraQuotesData.map(q => ({ text: q.text, theme: 'من الديوان' })));
+        }
+
+        if (typeof poetryData !== 'undefined') {
+            allData.poetry = poetryData.map(p => ({ text: p.lines.join('\n'), theme: p.title || 'شعر' }));
+        }
+
+        if (typeof biosData !== 'undefined') {
+            allData.bios = biosData.map(b => ({ text: b.quote, theme: b.title || 'نبذة' }));
+        }
+
+        // تعيين القسم الافتراضي (الاقتباسات)
+        switchSection('quotes');
         
         initParticles();
         initBgGrid();
         initFormatSelector();
         
+        // ربط الأحداث
         document.getElementById('shuffleBtn').addEventListener('click', shuffleQuote);
         document.getElementById('prevBtn').addEventListener('click', prevQuote);
         document.getElementById('nextBtn').addEventListener('click', nextQuote);
@@ -86,6 +107,23 @@
         document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
         document.getElementById('minimalModeToggle').addEventListener('click', toggleMinimalMode);
         document.getElementById('timerSelect').addEventListener('change', toggleTimer);
+
+        // أحداث الأقسام الثلاثة
+        document.getElementById('sectionQuotesBtn').addEventListener('click', () => switchSection('quotes'));
+        document.getElementById('sectionPoetryBtn').addEventListener('click', () => switchSection('poetry'));
+        document.getElementById('sectionBiosBtn').addEventListener('click', () => switchSection('bios'));
+        
+        // أحداث تحذير الشعر
+        document.getElementById('poetryWarningIcon').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('poetryWarningModal').classList.add('active');
+        });
+        document.getElementById('closePoetryWarning').addEventListener('click', () => {
+            document.getElementById('poetryWarningModal').classList.remove('active');
+        });
+        document.getElementById('confirmPoetryWarning').addEventListener('click', () => {
+            document.getElementById('poetryWarningModal').classList.remove('active');
+        });
         
         // إضافة زر المفضلة
         var favBtn = document.createElement('button');
@@ -114,6 +152,29 @@
             var diff = touchStartX - touchEndX;
             if (Math.abs(diff) > 50) { if (diff > 0) nextQuote(); else prevQuote(); }
         }, {passive: true});
+    }
+
+    function switchSection(section) {
+        currentSection = section;
+        quotes = allData[section] || [];
+        currentIndex = 0;
+        shownQuotes = [];
+        
+        // تحديث شكل الأزرار
+        document.querySelectorAll('.section-btn').forEach(btn => btn.classList.remove('active'));
+        if (section === 'quotes') document.getElementById('sectionQuotesBtn').classList.add('active');
+        if (section === 'poetry') document.getElementById('sectionPoetryBtn').classList.add('active');
+        if (section === 'bios') document.getElementById('sectionBiosBtn').classList.add('active');
+        
+        // تحديث العناوين في الواجهة بناءً على القسم
+        const titles = { 'quotes': 'أقوال الإمام علي', 'poetry': 'أشعار الإمام علي', 'bios': 'نبذات تعريفية' };
+        document.querySelector('header h1').textContent = titles[section];
+        
+        if (quotes.length > 0) {
+            shuffleQuote();
+        } else {
+            document.getElementById('quoteContent').textContent = 'لا توجد بيانات متاحة في هذا القسم';
+        }
     }
     
     function initFormatSelector() {
@@ -210,14 +271,13 @@
         var quote = quotes[currentIndex];
         var el = document.getElementById('quoteContent');
         
-        // تأثير تحريك النص (Typewriter)
         el.textContent = '';
         var i = 0;
         function typeWriter() {
             if (i < quote.text.length) {
                 el.textContent += quote.text.charAt(i);
                 i++;
-                setTimeout(typeWriter, 30);
+                setTimeout(typeWriter, 20);
             }
         }
         typeWriter();
@@ -227,7 +287,7 @@
     }
     
     function shuffleQuote() {
-        if (shownQuotes.length >= quotes.length) shownQuotes = []; // إعادة التصفير إذا انتهت الأقوال
+        if (shownQuotes.length >= quotes.length) shownQuotes = [];
         var nextIdx;
         do {
             nextIdx = Math.floor(Math.random() * quotes.length);
@@ -235,7 +295,7 @@
         
         shownQuotes.push(nextIdx);
         showQuote(nextIdx);
-        showToast('تم اختيار قول عشوائي (غير مكرر)');
+        showToast('تم اختيار عشوائي');
     }
     
     function toggleFavorite() {
@@ -254,21 +314,20 @@
     
     function updateFavoriteButton() {
         var btn = document.getElementById('favBtn');
-        if (!btn) return;
-        var quote = quotes[currentIndex];
-        var isFav = favorites.some(f => f.text === quote.text);
+        if (!btn || !quotes[currentIndex]) return;
+        var isFav = favorites.some(f => f.text === quotes[currentIndex].text);
         btn.innerHTML = isFav ? '❤️' : '🤍';
     }
     
-    function updateFontSize(textLength) {
-        var el = document.getElementById('quoteContent');
-        var baseSize;
-        if (textLength <= 30) baseSize = 2.0;
-        else if (textLength <= 50) baseSize = 1.6;
-        else if (textLength <= 80) baseSize = 1.3;
-        else if (textLength <= 120) baseSize = 1.1;
-        else baseSize = 0.95;
-        el.style.fontSize = (baseSize * fontSizeMultiplier) + 'em';
+    function prevQuote() { showQuote(currentIndex - 1); }
+    function nextQuote() { showQuote(currentIndex + 1); }
+    
+    function updateFontSize(length) {
+        var baseSize = 1.5;
+        if (length > 100) baseSize = 1.2;
+        if (length > 200) baseSize = 1.0;
+        if (length > 300) baseSize = 0.9;
+        document.getElementById('quoteContent').style.fontSize = (baseSize * fontSizeMultiplier) + 'em';
     }
     
     function changeFontSize() {
@@ -277,41 +336,42 @@
         else if (val === 'medium') fontSizeMultiplier = 1;
         else if (val === 'large') fontSizeMultiplier = 1.3;
         else if (val === 'xlarge') fontSizeMultiplier = 1.6;
-        var quote = quotes[currentIndex];
-        if (quote) updateFontSize(quote.text.length);
-        showToast('تم تغيير حجم الخط');
+        updateFontSize(quotes[currentIndex].text.length);
     }
     
     function toggleDarkMode() {
-        var container = document.getElementById('mainContainer');
-        var track = document.getElementById('darkModeTrack');
-        container.classList.toggle('dark-mode');
-        track.classList.toggle('active');
-        showToast(container.classList.contains('dark-mode') ? 'تم تفعيل الوضع الداكن' : 'تم إلغاء الوضع الداكن');
+        document.getElementById('mainContainer').classList.toggle('dark-mode');
+        document.getElementById('darkModeTrack').classList.toggle('active');
     }
     
     function toggleMinimalMode() {
-        var container = document.getElementById('mainContainer');
-        var track = document.getElementById('minimalModeTrack');
-        container.classList.toggle('minimal-mode');
-        track.classList.toggle('active');
-        showToast(container.classList.contains('minimal-mode') ? 'تم إخفاء العناصر' : 'تم إظهار العناصر');
-    }
-    
-    function toggleTimer() {
-        var val = parseInt(document.getElementById('timerSelect').value);
-        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-        if (val > 0) {
-            timerInterval = setInterval(function() { shuffleQuote(); }, val * 1000);
-            showToast('تم تفعيل المؤقت التلقائي كل ' + val + ' ثواني');
-        } else {
-            showToast('تم إيقاف المؤقت التلقائي');
+        document.getElementById('mainContainer').classList.toggle('minimal-mode');
+        document.getElementById('minimalModeTrack').classList.toggle('active');
+        if (document.getElementById('mainContainer').classList.contains('minimal-mode')) {
+            showToast('اضغط ESC للخروج من الوضع المبسط');
         }
     }
     
-    function prevQuote() { showQuote(currentIndex-1); }
-    function nextQuote() { showQuote(currentIndex+1); }
-    function openAllQuotes() { document.getElementById('allQuotesModal').classList.add('active'); displayAllQuotes(quotes); }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && document.getElementById('mainContainer').classList.contains('minimal-mode')) {
+            toggleMinimalMode();
+        }
+    });
+    
+    function toggleTimer() {
+        var val = parseInt(document.getElementById('timerSelect').value);
+        if (timerInterval) clearInterval(timerInterval);
+        if (val > 0) {
+            timerInterval = setInterval(shuffleQuote, val * 1000);
+            showToast('تم تفعيل المؤقت التلقائي');
+        }
+    }
+    
+    function openAllQuotes() {
+        document.getElementById('allQuotesModal').classList.add('active');
+        renderQuotesList(quotes);
+    }
+    
     function closeAllQuotes() { document.getElementById('allQuotesModal').classList.remove('active'); }
     function openAbout() { document.getElementById('aboutModal').classList.add('active'); }
     function closeAbout() { document.getElementById('aboutModal').classList.remove('active'); }
@@ -320,192 +380,171 @@
     function openSaveModal() { document.getElementById('saveModal').classList.add('active'); }
     function closeSaveModal() { document.getElementById('saveModal').classList.remove('active'); }
     
-    function displayAllQuotes(arr) {
+    function renderQuotesList(data) {
         var list = document.getElementById('quotesList');
         list.innerHTML = '';
-        // إضافة قسم المفضلة في البداية
-        if (favorites.length > 0) {
-            var favHeader = document.createElement('h3');
-            favHeader.textContent = 'المفضلة ❤️';
-            favHeader.style.color = '#d4a843'; favHeader.style.margin = '15px 0';
-            list.appendChild(favHeader);
-            favorites.forEach((q, i) => {
-                var item = document.createElement('div');
-                item.className = 'quote-item';
-                item.innerHTML = '<div class="q-text">'+q.text+'</div>';
-                item.addEventListener('click',function(){ showQuote(quotes.findIndex(orig => orig.text === q.text)); closeAllQuotes(); });
-                list.appendChild(item);
-            });
-            var allHeader = document.createElement('h3');
-            allHeader.textContent = 'جميع الأقوال';
-            allHeader.style.color = '#d4a843'; allHeader.style.margin = '15px 0';
-            list.appendChild(allHeader);
+        
+        // استخراج التصنيفات الفريدة للقسم الحالي
+        var themes = [...new Set(data.map(q => q.theme))];
+        var themeFilter = document.createElement('div');
+        themeFilter.className = 'theme-filters';
+        themeFilter.style.display = 'flex';
+        themeFilter.style.flexWrap = 'wrap';
+        themeFilter.style.gap = '8px';
+        themeFilter.style.marginBottom = '15px';
+        
+        var allBtn = document.createElement('button');
+        allBtn.textContent = 'الكل';
+        allBtn.className = 'btn btn-primary';
+        allBtn.style.padding = '5px 10px';
+        allBtn.addEventListener('click', () => filterByTheme(null));
+        themeFilter.appendChild(allBtn);
+        
+        themes.forEach(theme => {
+            var btn = document.createElement('button');
+            btn.textContent = theme;
+            btn.className = 'btn btn-secondary';
+            btn.style.padding = '5px 10px';
+            btn.addEventListener('click', () => filterByTheme(theme));
+            themeFilter.appendChild(btn);
+        });
+        
+        list.appendChild(themeFilter);
+        
+        var itemsContainer = document.createElement('div');
+        itemsContainer.id = 'itemsContainer';
+        list.appendChild(itemsContainer);
+        
+        function filterByTheme(theme) {
+            var filtered = theme ? data.filter(q => q.theme === theme) : data;
+            displayItems(filtered);
         }
         
-        for (var i=0;i<arr.length;i++) {
-            (function(idx){
+        function displayItems(items) {
+            itemsContainer.innerHTML = '';
+            items.forEach((q, idx) => {
                 var item = document.createElement('div');
                 item.className = 'quote-item';
-                item.innerHTML = '<div class="q-text">'+arr[idx].text+'</div><div class="q-number">#'+(idx+1)+'</div>';
-                item.addEventListener('click',function(){ showQuote(idx); closeAllQuotes(); });
-                list.appendChild(item);
-            })(i);
+                item.style.padding = '15px';
+                item.style.borderBottom = '1px solid rgba(212,168,67,0.1)';
+                item.style.cursor = 'pointer';
+                item.innerHTML = '<div style="color:#d4a843; font-size:0.8em; margin-bottom:5px;">' + q.theme + '</div>' + 
+                                 '<div style="color:#f5f0e8;">' + q.text.substring(0, 100) + (q.text.length > 100 ? '...' : '') + '</div>';
+                item.addEventListener('click', function() {
+                    var originalIdx = data.findIndex(item => item.text === q.text);
+                    showQuote(originalIdx);
+                    closeAllQuotes();
+                });
+                itemsContainer.appendChild(item);
+            });
         }
+        
+        displayItems(data);
     }
     
     function searchQuotes() {
-        var term = this.value.toLowerCase();
-        var termClean = term.replace(/[ًٌٍَُِّْ]/g, '');
-        var filtered = [];
-        for (var i=0;i<quotes.length;i++) {
-            var textClean = quotes[i].text.replace(/[ًٌٍَُِّْ]/g, '');
-            if (textClean.toLowerCase().includes(termClean) || quotes[i].text.toLowerCase().includes(term)) {
-                filtered.push(quotes[i]);
-            }
+        var term = document.getElementById('searchInput').value.toLowerCase();
+        var filtered = quotes.filter(q => q.text.toLowerCase().includes(term) || q.theme.toLowerCase().includes(term));
+        var container = document.getElementById('itemsContainer');
+        if (container) {
+            container.innerHTML = '';
+            filtered.forEach((q) => {
+                var item = document.createElement('div');
+                item.className = 'quote-item';
+                item.style.padding = '15px';
+                item.style.borderBottom = '1px solid rgba(212,168,67,0.1)';
+                item.style.cursor = 'pointer';
+                item.innerHTML = '<div style="color:#d4a843; font-size:0.8em; margin-bottom:5px;">' + q.theme + '</div>' + 
+                                 '<div style="color:#f5f0e8;">' + q.text.substring(0, 100) + (q.text.length > 100 ? '...' : '') + '</div>';
+                item.addEventListener('click', function() {
+                    var originalIdx = quotes.findIndex(item => item.text === q.text);
+                    showQuote(originalIdx);
+                    closeAllQuotes();
+                });
+                container.appendChild(item);
+            });
         }
-        displayAllQuotes(filtered);
     }
     
     function shareQuote() {
-        var quote = quotes[currentIndex];
-        if (!quote) return;
-        var text = ' قال الإمام علي (عليه السلام):\n\n' + quote.text + '\n\n— موقع أقوال الإمام علي';
+        var text = '﴿ ' + quotes[currentIndex].text + ' ﴾\n\n— الإمام علي بن أبي طالب (عليه السلام)';
         if (navigator.share) {
-            navigator.share({ title: 'أقوال الإمام علي', text: text, url: window.location.href })
-                .then(() => showToast('تم المشاركة بنجاح'))
-                .catch(() => showToast('تم إلغاء المشاركة'));
+            navigator.share({ title: 'حكمة علوية', text: text }).catch(() => {});
         } else {
-            var textarea = document.createElement('textarea');
-            textarea.value = text + '\n' + window.location.href;
-            document.body.appendChild(textarea); textarea.select();
-            document.execCommand('copy'); document.body.removeChild(textarea);
-            showToast('تم نسخ النص للمشاركة');
+            var temp = document.createElement('textarea');
+            temp.value = text; document.body.appendChild(temp);
+            temp.select(); document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast('تم نسخ الحكمة للمشاركة');
         }
     }
     
     function handleSaveAction() {
         var format = downloadFormats.find(f => f.id === selectedFormat);
-        if (format && format.isVideo) {
-            saveAsVideo();
-        } else {
-            saveAsImage();
-        }
+        if (format && format.isVideo) saveAsVideo(); else saveAsImage();
     }
     
-    function drawBackground(ctx, width, height, bgIndex) {
-        var bg = backgrounds[bgIndex];
-        if (bg.type === 'gradient') {
-            var grad = ctx.createLinearGradient(0,0,width,height);
-            grad.addColorStop(0, bg.colors[0]); grad.addColorStop(0.3, bg.colors[1]);
-            grad.addColorStop(0.7, bg.colors[2] || bg.colors[1]); grad.addColorStop(1, bg.colors[3] || bg.colors[1]);
-            ctx.fillStyle = grad; ctx.fillRect(0,0,width,height);
-        } else if (bg.type === 'checkerboard') {
-            var squareSize = Math.floor(width / 10);
-            for (var i = 0; i < Math.ceil(width / squareSize); i++) {
-                for (var j = 0; j < Math.ceil(height / squareSize); j++) {
-                    ctx.fillStyle = (i + j) % 2 === 0 ? bg.colors[0] : bg.colors[1];
-                    ctx.fillRect(i * squareSize, j * squareSize, squareSize, squareSize);
-                }
-            }
-        } else if (bg.type === 'stripes') {
-            var stripeWidth = Math.floor(width / 20);
-            for (var i = 0; i < Math.ceil(width / stripeWidth); i++) {
-                ctx.fillStyle = i % 2 === 0 ? bg.colors[0] : bg.colors[1];
-                ctx.fillRect(i * stripeWidth, 0, stripeWidth, height);
-            }
-        } else if (bg.type === 'dots') {
-            ctx.fillStyle = bg.colors[0]; ctx.fillRect(0, 0, width, height);
-            var dotSize = Math.floor(width / 30); var spacing = dotSize * 2;
-            ctx.fillStyle = bg.colors[1];
-            for (var x = 0; x < width; x += spacing) {
-                for (var y = 0; y < height; y += spacing) {
-                    ctx.beginPath(); ctx.arc(x + spacing/2, y + spacing/2, dotSize/2, 0, Math.PI*2); ctx.fill();
-                }
-            }
-        } else if (bg.type === 'grid') {
-            ctx.fillStyle = bg.colors[0]; ctx.fillRect(0, 0, width, height);
-            var gridSize = Math.floor(width / 15); ctx.strokeStyle = bg.colors[1]; ctx.lineWidth = 1;
-            for (var i = 0; i <= width; i += gridSize) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke(); }
-            for (var j = 0; j <= height; j += gridSize) { ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(width, j); ctx.stroke(); }
-        } else if (bg.type === 'waves') {
-            var grad = ctx.createLinearGradient(0, 0, 0, height);
-            grad.addColorStop(0, bg.colors[0]); grad.addColorStop(0.5, bg.colors[1]); grad.addColorStop(1, bg.colors[2] || bg.colors[1]);
-            ctx.fillStyle = grad; ctx.fillRect(0, 0, width, height);
-            ctx.strokeStyle = 'rgba(212,168,67,0.1)'; ctx.lineWidth = 2;
-            for (var waveOffset = 0; waveOffset < height; waveOffset += 40) {
-                ctx.beginPath();
-                for (var x = 0; x < width; x += 5) {
-                    var y = waveOffset + Math.sin(x * 0.01) * 20;
-                    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-                }
-                ctx.stroke();
-            }
-        }
-    }
-    
-    function drawQuoteOnCanvas(ctx, canvas, quote, format, frame = 0) {
+    function drawQuoteOnCanvas(ctx, canvas, quote, format, frame) {
+        var bg = backgrounds[selectedBg];
+        var padding = canvas.width * 0.08;
+        
         if (format.transparent) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         } else {
-            drawBackground(ctx, canvas.width, canvas.height, selectedBg);
-            // رسم الشرار المتحرك للفيديو
-            if (format.isVideo) {
-                for (var i=0; i<30; i++) {
-                    var p = {
-                        x: (Math.sin(frame * 0.02 + i) * 0.5 + 0.5) * canvas.width,
-                        y: ((frame * 2 + i * 100) % canvas.height),
-                        size: (Math.sin(frame * 0.05 + i) + 2) * 2
-                    };
-                    ctx.fillStyle = 'rgba(255,200,50,0.4)';
-                    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
-                }
+            if (bg.type === 'gradient') {
+                var grd = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                bg.colors.forEach((c, i) => grd.addColorStop(i / (bg.colors.length - 1), c));
+                ctx.fillStyle = grd; ctx.fillRect(0, 0, canvas.width, canvas.height);
             } else {
-                for (var i=0;i<8;i++) {
-                    var x=Math.random()*canvas.width, y=Math.random()*canvas.height, r=100+Math.random()*300;
-                    var cg=ctx.createRadialGradient(x,y,0,x,y,r);
-                    cg.addColorStop(0,'rgba(212,168,67,0.03)'); cg.addColorStop(1,'rgba(212,168,67,0)');
-                    ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+                ctx.fillStyle = bg.colors[0]; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            // إضافة تأثير الشرار إذا كان فيديو
+            if (frame !== undefined) {
+                ctx.fillStyle = 'rgba(212, 168, 67, 0.3)';
+                for (var i = 0; i < 50; i++) {
+                    var x = (Math.sin(frame * 0.05 + i) * 0.5 + 0.5) * canvas.width;
+                    var y = ((frame * 2 + i * 50) % canvas.height);
+                    ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
                 }
             }
         }
         
+        var cw = canvas.width - padding * 2, ch = canvas.height - padding * 4;
+        var cx = padding, cy = padding * 2;
+        
         if (!format.transparent) {
-            ctx.strokeStyle='rgba(212,168,67,0.1)'; ctx.lineWidth=3; ctx.strokeRect(100,100,canvas.width-200,canvas.height-200);
+            ctx.fillStyle = 'rgba(255,255,255,0.04)'; roundRect(ctx, cx, cy, cw, ch, 50); ctx.fill();
         }
         
-        var padding = Math.floor(canvas.width * 0.08);
-        var titleSize = Math.floor(canvas.width * 0.04);
-        if (!format.transparent) {
-            ctx.fillStyle='rgba(212,168,67,0.5)'; ctx.textAlign='center'; ctx.font=titleSize+'px "Amiri", serif';
-            ctx.fillText('قال الإمام علي (عليه السلام)', canvas.width/2, padding + titleSize);
-        }
+        ctx.fillStyle = format.transparent ? '#d4a843' : '#f5f0e8'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        var tl = quote.text.length, bfs = Math.floor(canvas.width * (tl <= 30 ? 0.06 : tl <= 50 ? 0.05 : tl <= 80 ? 0.04 : 0.035));
+        ctx.font = bfs + 'px "Amiri", serif';
         
-        var cx=padding, cy=padding*3, cw=canvas.width-padding*2, ch=canvas.height-padding*6;
-        if (!format.transparent) {
-            ctx.fillStyle='rgba(255,255,255,0.04)'; roundRect(ctx,cx,cy,cw,ch,50); ctx.fill();
-        }
-        
-        ctx.fillStyle=format.transparent ? '#d4a843' : '#f5f0e8'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        var tl=quote.text.length, bfs = Math.floor(canvas.width * (tl<=30?0.06:tl<=50?0.05:tl<=80?0.04:0.035));
-        ctx.font=bfs+'px "Amiri", serif';
-        
-        var words=quote.text.split(' '), lines=[], cl='';
-        for (var w=0;w<words.length;w++) {
-            var tl2=cl+' '+words[w], m=ctx.measureText(tl2);
-            if (m.width>(cw-padding)&&cl!==''){lines.push(cl);cl=words[w];}else{cl=tl2;}
+        var words = quote.text.split(' '), lines = [], cl = '';
+        for (var w = 0; w < words.length; w++) {
+            var tl2 = cl + ' ' + words[w], m = ctx.measureText(tl2);
+            if (m.width > cw - 60) { lines.push(cl); cl = words[w]; } else { cl = tl2; }
         }
         lines.push(cl);
         
-        var lh=bfs*1.8, sy=cy+ch/2-(lines.length-1)*lh/2;
-        for (var l=0;l<lines.length;l++) {
-            ctx.fillText(lines[l].trim(), canvas.width/2, sy+l*lh);
+        var lh = bfs * 1.5, th = lines.length * lh, sy = canvas.height / 2 - th / 2 + lh / 2;
+        
+        // رسم الأقواس الإسلامية
+        ctx.font = (bfs * 1.2) + 'px "Amiri", serif';
+        ctx.fillText('﴿', canvas.width / 2, sy - lh);
+        ctx.fillText('﴾', canvas.width / 2, sy + th);
+        
+        ctx.font = bfs + 'px "Amiri", serif';
+        for (var l = 0; l < lines.length; l++) {
+            ctx.fillText(lines[l].trim(), canvas.width / 2, sy + l * lh);
         }
         
         if (!format.transparent) {
             var sigSize = Math.floor(canvas.width * 0.02);
-            ctx.fillStyle='rgba(255,255,255,0.2)'; 
-            ctx.font=sigSize+'px Arial, sans-serif';
-            ctx.fillText('insta : ne_7u', canvas.width/2, canvas.height-padding);
+            ctx.fillStyle = 'rgba(255,255,255,0.2)'; 
+            ctx.font = sigSize + 'px Arial, sans-serif';
+            ctx.fillText('insta : ne_7u', canvas.width / 2, canvas.height - padding);
         }
     }
     
@@ -516,9 +555,9 @@
         var ctx = canvas.getContext('2d', { alpha: format.transparent });
         canvas.width = format.width; canvas.height = format.height;
         drawQuoteOnCanvas(ctx, canvas, quote, format);
-        var link=document.createElement('a');
-        link.download='قول_الإمام_علي_'+(currentIndex+1)+'.png';
-        link.href=canvas.toDataURL('image/png'); link.click();
+        var link = document.createElement('a');
+        link.download = 'أمام_علي_' + (currentIndex + 1) + '.png';
+        link.href = canvas.toDataURL('image/png'); link.click();
         showToast('تم حفظ الصورة بنجاح');
     }
     
@@ -531,7 +570,6 @@
         var ctx = canvas.getContext('2d');
         canvas.width = format.width; canvas.height = format.height;
         
-        // إعداد الصوت
         var audio = new Audio('audio.ogg');
         var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         var source = audioCtx.createMediaElementSource(audio);
@@ -553,14 +591,14 @@
             var blob = new Blob(chunks, { type: 'video/webm' });
             var url = URL.createObjectURL(blob);
             var link = document.createElement('a');
-            link.href = url; link.download = 'قول_الإمام_علي_فيديو.webm';
+            link.href = url; link.download = 'أمام_علي_فيديو.webm';
             link.click();
             isRecording = false;
             showToast('تم تصدير الفيديو بنجاح');
         };
         
         var frame = 0;
-        var maxFrames = 300; // 10 ثواني بمعدل 30 إطار
+        var maxFrames = 300; 
         function recordFrame() {
             if (frame < maxFrames) {
                 drawQuoteOnCanvas(ctx, canvas, quote, format, frame);
@@ -576,7 +614,7 @@
         recorder.start();
         audio.play();
         recordFrame();
-        showToast('جاري معالجة الفيديو مع الصوت (10 ثواني)...');
+        showToast('جاري معالجة الفيديو (10 ثواني)...');
     }
     
     function roundRect(ctx,x,y,w,h,r) {
@@ -589,16 +627,9 @@
     }
     
     function showToast(msg) {
-        var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+        var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
         setTimeout(function(){t.classList.remove('show');},3000);
     }
     
-    if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
-
-// دمج أشعار الديوان مع الأقوال الأصلية
-if (typeof extraQuotesData !== 'undefined' && Array.isArray(extraQuotesData)) {
-    quotes = quotes.concat(extraQuotesData);
-    console.log('✓ تم دمج أشعار الديوان (' + extraQuotesData.length + ' قول جديد)');
-}
-
