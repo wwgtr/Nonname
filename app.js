@@ -3,7 +3,6 @@
     
     var currentIndex = 0;
     var quotes = []; 
-    var shownQuotes = [];
     var fontSizeMultiplier = 1;
     var selectedBg = 0;
     var selectedFormat = 'hd';
@@ -31,6 +30,7 @@
     function init() {
         var section = window.currentSection || 'quotes';
         
+        // تحميل البيانات بناءً على القسم
         if (section === 'quotes') {
             if (typeof quotesData !== 'undefined') {
                 quotes = quotesData.map(q => ({ text: q.full || q.text, theme: q.theme || 'حكمة', original: q }));
@@ -48,12 +48,19 @@
             }
         }
 
-        renderItemsList(quotes);
+        // عرض القائمة فوراً
+        if (quotes.length > 0) {
+            renderItemsList(quotes);
+        } else {
+            var list = document.getElementById('itemsList');
+            if (list) list.innerHTML = '<div style="color:#d4a843;text-align:center;padding:20px;">لم يتم العثور على بيانات</div>';
+        }
+
         initParticles();
         initBgGrid();
         initFormatSelector();
         
-        // الأحداث
+        // ربط الأحداث
         document.getElementById('backToList')?.addEventListener('click', backToList);
         document.getElementById('prevBtn')?.addEventListener('click', prevQuote);
         document.getElementById('nextBtn')?.addEventListener('click', nextQuote);
@@ -209,10 +216,10 @@
             var lh = bfs * 2;
             var sy = canvas.height/2 - (pLines.length/4)*lh;
             
-            // رسم الأقواس للشعر
+            // رسم الأقواس للشعر (أفقياً)
             ctx.font = (bfs*1.5) + 'px "Amiri"';
-            ctx.fillText('﴿', canvas.width/2, sy - lh);
-            ctx.fillText('﴾', canvas.width/2, sy + (pLines.length/2)*lh);
+            ctx.textAlign = 'right'; ctx.fillText('﴿', canvas.width/2 - canvas.width*0.4, sy + (pLines.length/4)*lh);
+            ctx.textAlign = 'left'; ctx.fillText('﴾', canvas.width/2 + canvas.width*0.4, sy + (pLines.length/4)*lh);
             
             ctx.font = bfs + 'px "Amiri"';
             for (var l=0; l<pLines.length; l+=2) {
@@ -225,17 +232,18 @@
             var words = quote.text.split(' '), lines = [], cl = '';
             words.forEach(w => {
                 var m = ctx.measureText(cl + ' ' + w);
-                if (m.width > canvas.width - padding*2) { lines.push(cl); cl = w; } else cl += ' ' + w;
+                if (m.width > canvas.width - padding*3) { lines.push(cl); cl = w; } else cl += ' ' + w;
             });
             lines.push(cl);
             var sy = canvas.height/2 - (lines.length/2)*bfs*1.5;
             
-            // رسم الأقواس للاقتباس
+            // رسم الأقواس للاقتباس (أفقياً)
             ctx.font = (bfs*1.5) + 'px "Amiri"';
-            ctx.fillText('﴿', canvas.width/2, sy - bfs*1.2);
-            ctx.fillText('﴾', canvas.width/2, sy + lines.length*bfs*1.5);
+            ctx.textAlign = 'right'; ctx.fillText('﴿', canvas.width/2 - canvas.width*0.4, canvas.height/2);
+            ctx.textAlign = 'left'; ctx.fillText('﴾', canvas.width/2 + canvas.width*0.4, canvas.height/2);
             
             ctx.font = bfs + 'px "Amiri"';
+            ctx.textAlign = 'center';
             lines.forEach((l, i) => ctx.fillText(l.trim(), canvas.width/2, sy + i*bfs*1.5));
         }
         

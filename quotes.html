@@ -15,27 +15,39 @@
             <p class="subtitle">علي بن أبي طالب (عليه السلام)</p>
         </header>
         
-        <div class="quote-card" id="quoteCard">
-            <div id="contentTitle" class="content-title">اقتباس</div>
-            <div class="quote-text">
-                <span class="quote-mark">﴿</span>
-                <div id="quoteContent" class="quote-main-text">جارٍ التحميل...</div>
-                <div id="poetryContent" class="poetry-container" style="display: none;"></div>
-                <span class="quote-mark">﴾</span>
+        <!-- واجهة القائمة -->
+        <div id="listContainer" class="list-container">
+            <input type="text" id="searchInput" placeholder="ابحث عن قول أو تصنيف...">
+            <div id="itemsList" class="items-list">جارٍ تحميل العناوين...</div>
+        </div>
+
+        <!-- واجهة العرض -->
+        <div id="viewContainer" class="view-container">
+            <div class="back-to-list" id="backToList"><span>→</span> العودة للقائمة</div>
+            
+            <div class="quote-card" id="quoteCard">
+                <div id="contentTitle" class="content-title"></div>
+                <div class="quote-text">
+                    <span class="quote-mark">﴿</span>
+                    <div class="quote-content-wrapper">
+                        <div id="quoteContent" class="quote-main-text"></div>
+                        <div id="poetryContent" class="poetry-container" style="display: none;"></div>
+                    </div>
+                    <span class="quote-mark">﴾</span>
+                </div>
             </div>
-        </div>
 
-        <div class="controls">
-            <button id="shuffleBtn" class="btn btn-primary">عشوائي</button>
-            <button id="saveBtn" class="btn btn-success">حفظ</button>
-            <button id="shareBtn" class="btn btn-share">مشاركة</button>
-            <button id="allQuotesBtn" class="btn btn-info">القائمة</button>
-            <button id="settingsBtn" class="btn btn-settings">⚙️</button>
-        </div>
+            <div class="controls">
+                <button id="copyBtn" class="btn btn-primary">نسخ النص</button>
+                <button id="saveBtn" class="btn btn-success">حفظ</button>
+                <button id="shareBtn" class="btn btn-share">مشاركة</button>
+                <button id="settingsBtn" class="btn btn-settings">⚙️</button>
+            </div>
 
-        <div class="navigation">
-            <button id="prevBtn" class="nav-btn">السابق</button>
-            <button id="nextBtn" class="nav-btn">التالي</button>
+            <div class="navigation">
+                <button id="prevBtn" class="nav-btn">السابق</button>
+                <button id="nextBtn" class="nav-btn">التالي</button>
+            </div>
         </div>
 
         <div class="main-sections-nav">
@@ -46,15 +58,6 @@
     </div>
 
     <!-- Modals -->
-    <div id="allQuotesModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" id="closeAllQuotes">&times;</span>
-            <h2>جميع الاقتباسات</h2>
-            <input type="text" id="searchInput" placeholder="ابحث عن قول...">
-            <div id="quotesList"></div>
-        </div>
-    </div>
-
     <div id="settingsModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" id="closeSettings">&times;</span>
@@ -70,10 +73,6 @@
             <div class="toggle-switch" id="darkModeToggle">
                 <span>الوضع الداكن</span>
                 <div class="toggle-track" id="darkModeTrack"></div>
-            </div>
-            <div class="toggle-switch" id="minimalModeToggle">
-                <span>الوضع المبسط</span>
-                <div class="toggle-track" id="minimalModeTrack"></div>
             </div>
         </div>
     </div>
