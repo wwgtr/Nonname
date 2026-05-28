@@ -4,12 +4,9 @@
     var currentIndex = 0;
     var quotes = []; 
     var shownQuotes = [];
-    var favorites = JSON.parse(localStorage.getItem('amam_favorites') || '[]');
     var fontSizeMultiplier = 1;
     var selectedBg = 0;
     var selectedFormat = 'hd';
-    var timerInterval = null;
-    var isRecording = false;
     
     var backgrounds = [
         { name: 'ذهبي كلاسيك', colors: ['#0a0505','#1a0a05','#0a0510','#000000'], type: 'gradient' },
@@ -19,7 +16,6 @@
         { name: 'أحمر غامق', colors: ['#150505','#250a0a','#100505','#0a0000'], type: 'gradient' },
         { name: 'ذهبي وردي', colors: ['#1a0a10','#2a1518','#150a0e','#0a0508'], type: 'gradient' },
         { name: 'شطرنج ذهبي', colors: ['#0a0505','#1a0a05'], type: 'checkerboard' },
-        { name: 'خطوط عمودية', colors: ['#050a15','#0a1530'], type: 'stripes' },
         { name: 'نقاط ذهبية', colors: ['#0a0505','#d4a843'], type: 'dots' },
         { name: 'شبكة ذهبية', colors: ['#0a0505','#d4a843'], type: 'grid' }
     ];
@@ -52,43 +48,58 @@
             }
         }
 
-        if (quotes.length > 0) shuffleQuote();
-        
+        renderItemsList(quotes);
         initParticles();
         initBgGrid();
         initFormatSelector();
         
-        // الأحداث المشتركة
-        document.getElementById('shuffleBtn')?.addEventListener('click', shuffleQuote);
+        // الأحداث
+        document.getElementById('backToList')?.addEventListener('click', backToList);
         document.getElementById('prevBtn')?.addEventListener('click', prevQuote);
         document.getElementById('nextBtn')?.addEventListener('click', nextQuote);
         document.getElementById('saveBtn')?.addEventListener('click', openSaveModal);
         document.getElementById('shareBtn')?.addEventListener('click', shareQuote);
-        document.getElementById('allQuotesBtn')?.addEventListener('click', openAllQuotes);
+        document.getElementById('copyBtn')?.addEventListener('click', copyToClipboard);
         document.getElementById('settingsBtn')?.addEventListener('click', openSettings);
-        document.getElementById('closeAllQuotes')?.addEventListener('click', closeAllQuotes);
         document.getElementById('closeSettings')?.addEventListener('click', closeSettings);
         document.getElementById('closeSave')?.addEventListener('click', closeSaveModal);
         document.getElementById('confirmSave')?.addEventListener('click', handleSaveAction);
-        document.getElementById('searchInput')?.addEventListener('input', searchQuotes);
+        document.getElementById('searchInput')?.addEventListener('input', searchItems);
         document.getElementById('fontSizeSelect')?.addEventListener('change', changeFontSize);
         document.getElementById('darkModeToggle')?.addEventListener('click', toggleDarkMode);
-        document.getElementById('minimalModeToggle')?.addEventListener('click', toggleMinimalMode);
 
-        // أحداث الشعر
         if (section === 'poetry') {
             document.getElementById('poetryWarningIcon')?.addEventListener('click', () => document.getElementById('poetryWarningModal').classList.add('active'));
             document.getElementById('closePoetryWarning')?.addEventListener('click', () => document.getElementById('poetryWarningModal').classList.remove('active'));
             document.getElementById('confirmPoetryWarning')?.addEventListener('click', () => document.getElementById('poetryWarningModal').classList.remove('active'));
         }
-        
-        window.addEventListener('click', (e) => { if (e.target.classList.contains('modal')) e.target.classList.remove('active'); });
     }
 
-    function showQuote(index) {
-        if (quotes.length === 0) return;
-        currentIndex = (index + quotes.length) % quotes.length;
+    function renderItemsList(data) {
+        var list = document.getElementById('itemsList');
+        if (!list) return;
+        list.innerHTML = '';
+        data.forEach((item, idx) => {
+            var div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = '<div class="item-title">' + item.theme + '</div><div class="item-meta">عرض التفاصيل ←</div>';
+            div.onclick = () => showDetail(idx);
+            list.appendChild(div);
+        });
+    }
+
+    function searchItems() {
+        var term = document.getElementById('searchInput').value.toLowerCase();
+        var filtered = quotes.filter(q => q.text.toLowerCase().includes(term) || q.theme.toLowerCase().includes(term));
+        renderItemsList(filtered);
+    }
+
+    function showDetail(index) {
+        currentIndex = index;
         var item = quotes[currentIndex];
+        
+        document.getElementById('listContainer').classList.add('hidden');
+        document.getElementById('viewContainer').classList.add('active');
         
         var titleEl = document.getElementById('contentTitle');
         var textEl = document.getElementById('quoteContent');
@@ -122,18 +133,25 @@
         
         updateFontSize(item.text.length);
     }
-    
-    function shuffleQuote() {
-        if (shownQuotes.length >= quotes.length) shownQuotes = [];
-        var nextIdx;
-        do { nextIdx = Math.floor(Math.random() * quotes.length); } while (shownQuotes.includes(nextIdx) && quotes.length > 1);
-        shownQuotes.push(nextIdx);
-        showQuote(nextIdx);
+
+    function backToList() {
+        document.getElementById('listContainer').classList.remove('hidden');
+        document.getElementById('viewContainer').classList.remove('active');
     }
+
+    function prevQuote() { showDetail((currentIndex - 1 + quotes.length) % quotes.length); }
+    function nextQuote() { showDetail((currentIndex + 1) % quotes.length); }
     
-    function prevQuote() { showQuote(currentIndex - 1); }
-    function nextQuote() { showQuote(currentIndex + 1); }
-    
+    function copyToClipboard() {
+        var text = '﴿ ' + quotes[currentIndex].text + ' ﴾\n\n— الإمام علي (ع)';
+        navigator.clipboard.writeText(text).then(() => showToast('تم نسخ النص بنجاح'));
+    }
+
+    function shareQuote() {
+        var text = '﴿ ' + quotes[currentIndex].text + ' ﴾\n\n— الإمام علي (ع)';
+        if (navigator.share) navigator.share({ text: text }); else copyToClipboard();
+    }
+
     function updateFontSize(length) {
         var baseSize = 1.5;
         if (length > 100) baseSize = 1.2;
@@ -153,48 +171,10 @@
         document.getElementById('darkModeTrack').classList.toggle('active');
     }
     
-    function toggleMinimalMode() {
-        document.getElementById('mainContainer').classList.toggle('minimal-mode');
-        document.getElementById('minimalModeTrack').classList.toggle('active');
-    }
-    
-    function openAllQuotes() {
-        document.getElementById('allQuotesModal').classList.add('active');
-        renderQuotesList(quotes);
-    }
-    
-    function closeAllQuotes() { document.getElementById('allQuotesModal').classList.remove('active'); }
     function openSettings() { document.getElementById('settingsModal').classList.add('active'); }
     function closeSettings() { document.getElementById('settingsModal').classList.remove('active'); }
     function openSaveModal() { document.getElementById('saveModal').classList.add('active'); }
     function closeSaveModal() { document.getElementById('saveModal').classList.remove('active'); }
-    
-    function renderQuotesList(data) {
-        var list = document.getElementById('quotesList');
-        list.innerHTML = '';
-        data.forEach((q, idx) => {
-            var item = document.createElement('div');
-            item.className = 'quote-item';
-            item.innerHTML = '<div class="q-text">' + q.text.substring(0, 60) + '...</div><div class="q-number">' + q.theme + '</div>';
-            item.onclick = () => { showQuote(idx); closeAllQuotes(); };
-            list.appendChild(item);
-        });
-    }
-    
-    function searchQuotes() {
-        var term = document.getElementById('searchInput').value.toLowerCase();
-        var filtered = quotes.filter(q => q.text.toLowerCase().includes(term) || q.theme.toLowerCase().includes(term));
-        renderQuotesList(filtered);
-    }
-    
-    function shareQuote() {
-        var text = '﴿ ' + quotes[currentIndex].text + ' ﴾\n\n— الإمام علي (ع)';
-        if (navigator.share) navigator.share({ text: text });
-        else {
-            navigator.clipboard.writeText(text);
-            showToast('تم نسخ النص');
-        }
-    }
     
     function handleSaveAction() {
         var format = downloadFormats.find(f => f.id === selectedFormat);
@@ -228,6 +208,13 @@
             ctx.font = bfs + 'px "Amiri"';
             var lh = bfs * 2;
             var sy = canvas.height/2 - (pLines.length/4)*lh;
+            
+            // رسم الأقواس للشعر
+            ctx.font = (bfs*1.5) + 'px "Amiri"';
+            ctx.fillText('﴿', canvas.width/2, sy - lh);
+            ctx.fillText('﴾', canvas.width/2, sy + (pLines.length/2)*lh);
+            
+            ctx.font = bfs + 'px "Amiri"';
             for (var l=0; l<pLines.length; l+=2) {
                 ctx.textAlign = 'right'; ctx.fillText(pLines[l], canvas.width/2 - 20, sy + (l/2)*lh);
                 ctx.textAlign = 'left'; ctx.fillText(pLines[l+1] || '', canvas.width/2 + 20, sy + (l/2)*lh);
@@ -242,6 +229,13 @@
             });
             lines.push(cl);
             var sy = canvas.height/2 - (lines.length/2)*bfs*1.5;
+            
+            // رسم الأقواس للاقتباس
+            ctx.font = (bfs*1.5) + 'px "Amiri"';
+            ctx.fillText('﴿', canvas.width/2, sy - bfs*1.2);
+            ctx.fillText('﴾', canvas.width/2, sy + lines.length*bfs*1.5);
+            
+            ctx.font = bfs + 'px "Amiri"';
             lines.forEach((l, i) => ctx.fillText(l.trim(), canvas.width/2, sy + i*bfs*1.5));
         }
         
@@ -268,7 +262,6 @@
         var canvas = document.getElementById('imageCanvas');
         var ctx = canvas.getContext('2d');
         canvas.width = format.width; canvas.height = format.height;
-        
         var audio = new Audio('audio.ogg');
         var stream = canvas.captureStream(30);
         var recorder = new MediaRecorder(stream);
@@ -280,7 +273,6 @@
             link.href = URL.createObjectURL(blob); link.download = 'amam_ali_video.webm'; link.click();
             showToast('تم تصدير الفيديو');
         };
-        
         recorder.start(); audio.play();
         var frame = 0;
         function record() {
