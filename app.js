@@ -194,7 +194,7 @@
         if (!format.transparent) {
             ctx.fillStyle = 'rgba(212, 168, 67, 0.4)';
             ctx.font = (canvas.width * 0.03) + 'px "Cairo"';
-            ctx.fillText('INSTA : NE_7U | TELEGRAM : NE_7U', canvas.width/2, canvas.height * 0.9);
+            ctx.fillText('INSTA : NE_7U | TELEGRAM : WWGTR', canvas.width/2, canvas.height * 0.9);
         }
     }
 
@@ -215,7 +215,20 @@
         var canvas = document.getElementById('imageCanvas');
         var ctx = canvas.getContext('2d');
         canvas.width = format.width; canvas.height = format.height;
+        var audio = new Audio('audio.ogg');
+        audio.currentTime = 0;
+        
         var stream = canvas.captureStream(30);
+        // إضافة مسار الصوت للفيديو إذا كان مدعوماً
+        try {
+            var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            var source = audioCtx.createMediaElementSource(audio);
+            var dest = audioCtx.createMediaStreamDestination();
+            source.connect(dest);
+            source.connect(audioCtx.destination);
+            stream.addTrack(dest.stream.getAudioTracks()[0]);
+        } catch(e) { console.log('Audio mix not supported in this browser'); }
+
         var recorder = new MediaRecorder(stream);
         var chunks = [];
         recorder.ondataavailable = e => chunks.push(e.data);
@@ -226,6 +239,7 @@
             showToast('تم تصدير الفيديو');
         };
         recorder.start();
+        audio.play();
         var frame = 0;
         function record() {
             if (frame < 450) { // 15s
@@ -234,7 +248,7 @@
                 ctx.fillStyle = 'rgba(212, 168, 67, ' + (Math.sin(frame/10)*0.1 + 0.1) + ')';
                 ctx.fillRect(0,0,canvas.width,canvas.height);
                 frame++; requestAnimationFrame(record);
-            } else { recorder.stop(); }
+            } else { recorder.stop(); audio.pause(); }
         }
         record();
     }
