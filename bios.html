@@ -15,15 +15,13 @@
             <p class="subtitle">سيرة وحياة الإمام علي (عليه السلام)</p>
         </header>
         
-        <!-- واجهة القائمة -->
         <div id="listContainer" class="list-container">
-            <input type="text" id="searchInput" placeholder="ابحث عن عنوان نبذة...">
-            <div id="itemsList" class="items-list">جارٍ تحميل العناوين...</div>
+            <input type="text" id="searchInput" placeholder="ابحث عن عنوان...">
+            <div id="itemsList" class="items-list"></div>
         </div>
 
-        <!-- واجهة العرض -->
         <div id="viewContainer" class="view-container">
-            <div class="back-to-list" id="backToList"><span>→</span> العودة للقائمة</div>
+            <div class="back-to-list" id="backToList"><span>→</span> العودة للعناوين</div>
             
             <div class="quote-card" id="quoteCard">
                 <div id="contentTitle" class="content-title"></div>
@@ -37,42 +35,25 @@
                 </div>
             </div>
 
-            <div class="controls">
-                <button id="copyBtn" class="btn btn-primary">نسخ النبذة</button>
-                <button id="saveBtn" class="btn btn-success">حفظ</button>
-                <button id="shareBtn" class="btn btn-share">مشاركة</button>
-                <button id="settingsBtn" class="btn btn-settings">⚙️</button>
-            </div>
+            <div class="action-buttons">
+                <div class="controls">
+                    <button id="copyBtn" class="btn btn-primary">نسخ النص</button>
+                    <button id="saveBtn" class="btn btn-success">حفظ</button>
+                    <button id="shareBtn" class="btn btn-share">مشاركة</button>
+                    <button id="settingsBtn" class="btn btn-settings">⚙️</button>
+                </div>
 
-            <div class="navigation">
-                <button id="prevBtn" class="nav-btn">السابق</button>
-                <button id="nextBtn" class="nav-btn">التالي</button>
-            </div>
-        </div>
+                <div class="section-links-middle">
+                    <a href="index.html" class="btn-mini">الحكم والأقوال</a>
+                    <a href="poetry.html" class="btn-mini">الشعر</a>
+                    <a href="quotes.html" class="btn-mini">الاقتباسات</a>
+                    <a href="bios.html" class="btn-mini active">النبذات</a>
+                </div>
 
-        <div class="main-sections-nav">
-            <a href="quotes.html" class="section-btn">الاقتباسات</a>
-            <a href="poetry.html" class="section-btn">الشعر ⚠️</a>
-            <a href="bios.html" class="section-btn active">النبذات</a>
-        </div>
-    </div>
-
-    <!-- Modals -->
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" id="closeSettings">&times;</span>
-            <h2>الإعدادات</h2>
-            <div class="settings-group">
-                <label>حجم الخط</label>
-                <select id="fontSizeSelect">
-                    <option value="small">صغير</option>
-                    <option value="medium" selected>متوسط</option>
-                    <option value="large">كبير</option>
-                </select>
-            </div>
-            <div class="toggle-switch" id="darkModeToggle">
-                <span>الوضع الداكن</span>
-                <div class="toggle-track" id="darkModeTrack"></div>
+                <div class="navigation">
+                    <button id="prevBtn" class="nav-btn">السابق</button>
+                    <button id="nextBtn" class="nav-btn">التالي</button>
+                </div>
             </div>
         </div>
     </div>

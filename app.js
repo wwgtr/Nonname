@@ -24,14 +24,14 @@
         { id: 'story', name: 'ستوري', width: 1080, height: 1920 },
         { id: 'instagram', name: 'منشور انستقرام', width: 1080, height: 1080 },
         { id: 'sticker', name: 'ملصق شفاف', width: 1024, height: 1024, transparent: true },
-        { id: 'video_story', name: 'فيديو ستوري (10 ثواني)', width: 1080, height: 1920, isVideo: true }
+        { id: 'video_story', name: 'فيديو ستوري (15 ثانية)', width: 1080, height: 1920, isVideo: true }
     ];
     
     function init() {
-        var section = window.currentSection || 'quotes';
+        var section = window.currentSection || 'home';
         
         // تحميل البيانات بناءً على القسم
-        if (section === 'quotes') {
+        if (section === 'home' || section === 'quotes') {
             if (typeof quotesData !== 'undefined') {
                 quotes = quotesData.map(q => ({ text: q.full || q.text, theme: q.theme || 'حكمة', original: q }));
             }
@@ -48,12 +48,11 @@
             }
         }
 
-        // عرض القائمة فوراً
-        if (quotes.length > 0) {
-            renderItemsList(quotes);
+        // منطق العرض الأولي
+        if (section === 'home') {
+            shuffleQuote();
         } else {
-            var list = document.getElementById('itemsList');
-            if (list) list.innerHTML = '<div style="color:#d4a843;text-align:center;padding:20px;">لم يتم العثور على بيانات</div>';
+            renderItemsList(quotes);
         }
 
         initParticles();
@@ -67,6 +66,7 @@
         document.getElementById('saveBtn')?.addEventListener('click', openSaveModal);
         document.getElementById('shareBtn')?.addEventListener('click', shareQuote);
         document.getElementById('copyBtn')?.addEventListener('click', copyToClipboard);
+        document.getElementById('pdfBtn')?.addEventListener('click', saveAsPDF);
         document.getElementById('settingsBtn')?.addEventListener('click', openSettings);
         document.getElementById('closeSettings')?.addEventListener('click', closeSettings);
         document.getElementById('closeSave')?.addEventListener('click', closeSaveModal);
@@ -74,12 +74,6 @@
         document.getElementById('searchInput')?.addEventListener('input', searchItems);
         document.getElementById('fontSizeSelect')?.addEventListener('change', changeFontSize);
         document.getElementById('darkModeToggle')?.addEventListener('click', toggleDarkMode);
-
-        if (section === 'poetry') {
-            document.getElementById('poetryWarningIcon')?.addEventListener('click', () => document.getElementById('poetryWarningModal').classList.add('active'));
-            document.getElementById('closePoetryWarning')?.addEventListener('click', () => document.getElementById('poetryWarningModal').classList.remove('active'));
-            document.getElementById('confirmPoetryWarning')?.addEventListener('click', () => document.getElementById('poetryWarningModal').classList.remove('active'));
-        }
     }
 
     function renderItemsList(data) {
@@ -89,7 +83,7 @@
         data.forEach((item, idx) => {
             var div = document.createElement('div');
             div.className = 'list-item';
-            div.innerHTML = '<div class="item-title">' + item.theme + '</div><div class="item-meta">عرض التفاصيل ←</div>';
+            div.innerHTML = '<div class="item-title">' + item.theme + '</div><div class="item-meta">عرض ←</div>';
             div.onclick = () => showDetail(idx);
             list.appendChild(div);
         });
@@ -105,8 +99,8 @@
         currentIndex = index;
         var item = quotes[currentIndex];
         
-        document.getElementById('listContainer').classList.add('hidden');
-        document.getElementById('viewContainer').classList.add('active');
+        document.getElementById('listContainer')?.classList.add('hidden');
+        document.getElementById('viewContainer')?.classList.add('active');
         
         var titleEl = document.getElementById('contentTitle');
         var textEl = document.getElementById('quoteContent');
@@ -114,7 +108,7 @@
         
         if (titleEl) titleEl.textContent = item.theme;
         
-        if (window.currentSection === 'poetry' && item.lines) {
+        if ((window.currentSection === 'poetry' || window.currentSection === 'home') && item.lines) {
             textEl.style.display = 'none';
             poetryEl.style.display = 'flex';
             poetryEl.innerHTML = '';
@@ -125,7 +119,7 @@
                                     '<div class="poetry-part ajuz">' + (item.lines[i+1] || '') + '</div>';
                 poetryEl.appendChild(lineDiv);
             }
-        } else if (window.currentSection === 'quotes' && item.original && item.original.first) {
+        } else if (item.original && item.original.first) {
             textEl.style.display = 'none';
             poetryEl.style.display = 'flex';
             poetryEl.innerHTML = '<div class="poetry-line">' + 
@@ -146,6 +140,11 @@
         document.getElementById('viewContainer').classList.remove('active');
     }
 
+    function shuffleQuote() {
+        currentIndex = Math.floor(Math.random() * quotes.length);
+        showDetail(currentIndex);
+    }
+
     function prevQuote() { showDetail((currentIndex - 1 + quotes.length) % quotes.length); }
     function nextQuote() { showDetail((currentIndex + 1) % quotes.length); }
     
@@ -157,6 +156,33 @@
     function shareQuote() {
         var text = '﴿ ' + quotes[currentIndex].text + ' ﴾\n\n— الإمام علي (ع)';
         if (navigator.share) navigator.share({ text: text }); else copyToClipboard();
+    }
+
+    function saveAsPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const item = quotes[currentIndex];
+        
+        doc.setFont('Amiri', 'bold');
+        doc.setTextColor(139, 69, 19);
+        doc.text(item.theme, 105, 30, { align: 'center' });
+        
+        doc.setFont('Amiri', 'normal');
+        doc.setTextColor(61, 43, 31);
+        
+        if (item.lines) {
+            item.lines.forEach((line, i) => {
+                doc.text(line, 105, 50 + (i * 10), { align: 'center' });
+            });
+        } else {
+            const splitText = doc.splitTextToSize(item.text, 160);
+            doc.text(splitText, 105, 50, { align: 'center' });
+        }
+        
+        doc.setFontSize(10);
+        doc.text('insta : ne_7u', 105, 280, { align: 'center' });
+        doc.save('amam_ali_poetry.pdf');
+        showToast('تم تصدير ملف PDF');
     }
 
     function updateFontSize(length) {
@@ -206,20 +232,20 @@
         ctx.font = 'bold ' + (canvas.width * 0.04) + 'px "Cairo"';
         ctx.fillText(quote.theme, canvas.width/2, padding*2);
 
-        var isPoetry = (window.currentSection === 'poetry' && quote.lines) || (quote.original && quote.original.first);
+        var isPoetry = (window.currentSection === 'poetry' || window.currentSection === 'home') && quote.lines;
         ctx.fillStyle = format.transparent ? '#d4a843' : '#f5f0e8';
         
         if (isPoetry) {
-            var pLines = quote.lines || [quote.original.first, quote.original.second];
+            var pLines = quote.lines;
             var bfs = Math.floor(canvas.width * 0.045);
             ctx.font = bfs + 'px "Amiri"';
             var lh = bfs * 2;
             var sy = canvas.height/2 - (pLines.length/4)*lh;
             
-            // رسم الأقواس للشعر (أفقياً)
+            // رسم الأقواس أفقياً
             ctx.font = (bfs*1.5) + 'px "Amiri"';
-            ctx.textAlign = 'right'; ctx.fillText('﴿', canvas.width/2 - canvas.width*0.4, sy + (pLines.length/4)*lh);
-            ctx.textAlign = 'left'; ctx.fillText('﴾', canvas.width/2 + canvas.width*0.4, sy + (pLines.length/4)*lh);
+            ctx.textAlign = 'right'; ctx.fillText('﴿', canvas.width/2 - canvas.width*0.4, canvas.height/2);
+            ctx.textAlign = 'left'; ctx.fillText('﴾', canvas.width/2 + canvas.width*0.4, canvas.height/2);
             
             ctx.font = bfs + 'px "Amiri"';
             for (var l=0; l<pLines.length; l+=2) {
@@ -237,7 +263,6 @@
             lines.push(cl);
             var sy = canvas.height/2 - (lines.length/2)*bfs*1.5;
             
-            // رسم الأقواس للاقتباس (أفقياً)
             ctx.font = (bfs*1.5) + 'px "Amiri"';
             ctx.textAlign = 'right'; ctx.fillText('﴿', canvas.width/2 - canvas.width*0.4, canvas.height/2);
             ctx.textAlign = 'left'; ctx.fillText('﴾', canvas.width/2 + canvas.width*0.4, canvas.height/2);
@@ -265,7 +290,7 @@
     }
 
     function saveAsVideo() {
-        showToast('جاري تحضير الفيديو (10 ثوان)...');
+        showToast('جاري تحضير الفيديو (15 ثانية)...');
         var format = downloadFormats.find(f => f.id === 'video_story');
         var canvas = document.getElementById('imageCanvas');
         var ctx = canvas.getContext('2d');
@@ -284,7 +309,7 @@
         recorder.start(); audio.play();
         var frame = 0;
         function record() {
-            if (frame < 300) {
+            if (frame < 450) { // 15 seconds * 30 fps
                 drawQuoteOnCanvas(ctx, canvas, quotes[currentIndex], format, frame);
                 frame++; requestAnimationFrame(record);
             } else { recorder.stop(); audio.pause(); }

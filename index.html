@@ -3,116 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>أقوال الإمام علي (ع) - الرئيسية</title>
+    <title>أقوال الإمام علي - الحكم والأقوال</title>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <style>
-        .welcome-card {
-            text-align: center;
-            padding: 20px;
-        }
-        .welcome-card h2 {
-            color: #d4a843;
-            font-family: 'Amiri', serif;
-            font-size: 1.8em;
-            margin-bottom: 20px;
-        }
-        .sections-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .main-nav-card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(212,168,67,0.15);
-            border-radius: 15px;
-            padding: 20px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-        .main-nav-card:hover {
-            background: rgba(212,168,67,0.1);
-            transform: translateY(-5px);
-            border-color: #d4a843;
-        }
-        .main-nav-card .icon { font-size: 2.5em; }
-        .main-nav-card .title { color: #d4a843; font-weight: bold; font-size: 1.2em; }
-        .main-nav-card .desc { color: rgba(255,255,255,0.5); font-size: 0.85em; }
-        
-        .footer-info {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 0.8em;
-            color: rgba(255,255,255,0.3);
-            font-family: 'Amiri', serif;
-        }
-    </style>
 </head>
 <body>
     <canvas id="particlesCanvas"></canvas>
-    <div class="container">
+    <div class="container" id="mainContainer">
         <header>
             <h1>أقوال الإمام علي</h1>
             <p class="subtitle">علي بن أبي طالب (عليه السلام)</p>
         </header>
         
-        <div class="welcome-card">
-            <h2>مرحباً بك في رحاب الحكمة</h2>
-            <div class="sections-grid">
-                <a href="quotes.html" class="main-nav-card">
-                    <span class="icon">📜</span>
-                    <span class="title">الاقتباسات</span>
-                    <span class="desc">حكم وأقوال بليغة ومختصرة</span>
-                </a>
-                <a href="poetry.html" class="main-nav-card">
-                    <span class="icon">✒️</span>
-                    <span class="title">الشعر</span>
-                    <span class="desc">قصائد وأبيات منسوبة للإمام</span>
-                </a>
-                <a href="bios.html" class="main-nav-card">
-                    <span class="icon">📖</span>
-                    <span class="title">النبذات</span>
-                    <span class="desc">سيرة وحياة أمير المؤمنين</span>
-                </a>
+        <div class="quote-card" id="quoteCard">
+            <div id="contentTitle" class="content-title">حكمة</div>
+            <div class="quote-text">
+                <span class="quote-mark">﴿</span>
+                <div class="quote-content-wrapper">
+                    <div id="quoteContent" class="quote-main-text">جارٍ التحميل...</div>
+                    <div id="poetryContent" class="poetry-container" style="display: none;"></div>
+                </div>
+                <span class="quote-mark">﴾</span>
             </div>
         </div>
 
-        <div class="footer-info">
-            جميع الحقوق محفوظة © insta : ne_7u
+        <div class="action-buttons">
+            <div class="controls">
+                <button id="copyBtn" class="btn btn-primary">نسخ النص</button>
+                <button id="saveBtn" class="btn btn-success">حفظ</button>
+                <button id="shareBtn" class="btn btn-share">مشاركة</button>
+                <button id="settingsBtn" class="btn btn-settings">⚙️</button>
+            </div>
+
+            <div class="section-links-middle">
+                <a href="index.html" class="btn-mini active">الحكم والأقوال</a>
+                <a href="poetry.html" class="btn-mini">الشعر</a>
+                <a href="quotes.html" class="btn-mini">الاقتباسات</a>
+                <a href="bios.html" class="btn-mini">النبذات</a>
+            </div>
+
+            <div class="navigation">
+                <button id="prevBtn" class="nav-btn">السابق</button>
+                <button id="nextBtn" class="nav-btn">التالي</button>
+            </div>
         </div>
     </div>
 
-    <script>
-        // نظام الشرار البسيط للصفحة الرئيسية
-        const canvas = document.getElementById('particlesCanvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        resize();
-        window.addEventListener('resize', resize);
-        for(let i=0; i<50; i++) {
-            particles.push({
-                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
-                size: Math.random()*2+1, speedY: -Math.random()*1-0.5,
-                opacity: Math.random()
-            });
-        }
-        function animate() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            particles.forEach(p => {
-                p.y += p.speedY;
-                if(p.y < -10) p.y = canvas.height+10;
-                ctx.fillStyle = `rgba(212,168,67,${p.opacity})`;
-                ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
-            });
-            requestAnimationFrame(animate);
-        }
-        animate();
-    </script>
+    <!-- Modals -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeSettings">&times;</span>
+            <h2>الإعدادات</h2>
+            <div class="settings-group">
+                <label>حجم الخط</label>
+                <select id="fontSizeSelect">
+                    <option value="small">صغير</option>
+                    <option value="medium" selected>متوسط</option>
+                    <option value="large">كبير</option>
+                </select>
+            </div>
+            <div class="toggle-switch" id="darkModeToggle">
+                <span>الوضع الداكن</span>
+                <div class="toggle-track" id="darkModeTrack"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeSave">&times;</span>
+            <h2>حفظ الصورة</h2>
+            <div class="settings-group">
+                <label>التنسيق</label>
+                <select id="formatSelect"></select>
+            </div>
+            <div class="bg-grid" id="bgGrid"></div>
+            <button id="confirmSave" class="save-btn-confirm">تأكيد الحفظ</button>
+        </div>
+    </div>
+
+    <canvas id="imageCanvas" style="display:none;"></canvas>
+    <div id="toast" class="toast"></div>
+
+    <script>window.currentSection = 'home';</script>
+    <script src="quotes_data.js"></script>
+    <script src="extra_quotes.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
