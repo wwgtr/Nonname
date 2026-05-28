@@ -7,10 +7,12 @@
     
     var downloadFormats = [
         { id: 'hd', name: 'صورة ملكية (4K)', width: 2160, height: 3840 },
-        { id: 'story', name: 'ستوري فخم', width: 1080, height: 1920 },
-        { id: 'instagram', name: 'منشور مربع', width: 1080, height: 1080 },
+        { id: 'story_insta', name: 'انستقرام ستوري', width: 1080, height: 1920 },
+        { id: 'post_insta', name: 'انستقرام منشور', width: 1080, height: 1350 },
+        { id: 'post_square', name: 'منشور مربع (1:1)', width: 1080, height: 1080 },
+        { id: 'telegram_channel', name: 'قناة تلجرام', width: 1280, height: 720 },
         { id: 'sticker', name: 'ملصق شفاف', width: 1024, height: 1024, transparent: true },
-        { id: 'video', name: 'فيديو سينمائي (15 ث)', width: 1080, height: 1920, isVideo: true }
+        { id: 'video_story', name: 'فيديو ستوري (15 ث)', width: 1080, height: 1920, isVideo: true }
     ];
     
     function init() {
@@ -30,7 +32,7 @@
                 var extra = extraQuotesData.map(q => {
                     var parts = q.text.split('...');
                     if (parts.length < 2) parts = q.text.split('،');
-                    return { text: q.text, theme: 'من الديوان', lines: parts.length >= 2 ? [parts[0].trim(), parts[1].trim()] : [q.text, ''] };
+                    return { text: q.text, theme: 'شعر علوي', lines: parts.length >= 2 ? [parts[0].trim(), parts[1].trim()] : [q.text, ''] };
                 });
                 quotes = quotes.concat(extra);
             }
