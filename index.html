@@ -3,51 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>معدن الحكمة - أمير المؤمنين</title>
+    <title>معدن الحكمة - الاقتباسات</title>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <canvas id="particlesCanvas"></canvas>
     
+    <div class="fixed-nav">
+        <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="fixed-btn" title="للأعلى">▲</button>
+        <a href="index.html" class="fixed-btn" title="الرئيسية">🏠</a>
+        <button onclick="window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'})" class="fixed-btn" title="للأسفل">▼</button>
+    </div>
+
     <div class="container">
         <header>
-            <h1>معدن الحكمة</h1>
-            <p class="subtitle">AL-IMAM ALI BIN ABI TALIB</p>
+            <h1>الاقتباسات العلويّة</h1>
+            <p class="subtitle">IMAM ALI QUOTES</p>
         </header>
 
         <main>
-            <div class="main-card" id="quoteCard">
-                <div class="card-title" id="cardCategory">حكمة</div>
-                <div class="quote-wrapper">
-                    <span class="quote-mark">﴿</span>
-                    <div id="quoteContent" class="quote-content">جارٍ التحميل...</div>
-                    <div id="poetryContent" class="poetry-box" style="display: none;"></div>
-                    <span class="quote-mark">﴾</span>
+            <div id="listContainer">
+                <input type="text" id="searchInput" placeholder="ابحث في الاقتباسات..." style="width:100%; padding:15px; background:rgba(255,255,255,0.03); border:1px solid rgba(212,168,67,0.2); border-radius:15px; color:#fff; margin-bottom:20px; font-family:'Cairo';">
+                <div id="itemsList" class="list-view"></div>
+            </div>
+
+            <div id="viewContainer" style="display:none;">
+                <button id="backToList" style="background:none; border:none; color:var(--gold); cursor:pointer; margin-bottom:15px; font-size:0.9em; font-family:'Cairo';">← العودة للقائمة</button>
+                
+                <div class="main-card" id="quoteCard">
+                    <div class="card-title" id="cardCategory">اقتباس</div>
+                    <div class="quote-wrapper">
+                        <span class="quote-mark">﴿</span>
+                        <div id="quoteContent" class="quote-content"></div>
+                        <div id="poetryContent" class="poetry-box" style="display:none;"></div>
+                        <span class="quote-mark">﴾</span>
+                    </div>
+                </div>
+
+                <div class="action-hub">
+                    <div class="control-buttons">
+                        <button id="copyBtn" class="btn-circle" title="نسخ">📋</button>
+                        <button id="saveBtn" class="btn-circle" title="تصدير">🖼️</button>
+                        <button id="randomBtn" class="btn-circle" title="قول عشوائي">🎲</button>
+                    </div>
+                    <div class="nav-arrows">
+                        <button id="prevBtn" class="arrow-btn">◀</button>
+                        <button id="nextBtn" class="arrow-btn">▶</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="action-hub">
-                <div class="control-buttons">
-                    <button id="copyBtn" class="btn-circle" title="نسخ">📋</button>
-                    <button id="saveBtn" class="btn-circle" title="حفظ">🖼️</button>
-                    <button id="shareBtn" class="btn-circle" title="مشاركة">🔗</button>
-                    <button id="settingsBtn" class="btn-circle" title="إعدادات">⚙️</button>
-                </div>
-
-                <nav class="sections-nav">
-                    <a href="index.html" class="nav-item active">الحكم</a>
-                    <a href="poetry.html" class="nav-item">الشعر</a>
-                    <a href="quotes.html" class="nav-item">الاقتباسات</a>
-                    <a href="bios.html" class="nav-item">النبذات</a>
-                    <a href="about.html" class="nav-item">حول</a>
-                </nav>
-
-                <div class="nav-arrows">
-                    <button id="prevBtn" class="arrow-btn">◀</button>
-                    <button id="nextBtn" class="arrow-btn">▶</button>
-                </div>
-            </div>
+            <nav class="sections-nav">
+                <a href="index.html" class="nav-item active">الاقتباسات</a>
+                <a href="poetry.html" class="nav-item">الشعر</a>
+                <a href="bios.html" class="nav-item">النبذات</a>
+                <a href="about.html" class="nav-item">حول</a>
+            </nav>
         </main>
 
         <footer class="footer-rights">
@@ -58,20 +70,19 @@
     <!-- Modals -->
     <div id="saveModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" id="closeSave">&times;</span>
-            <h2 style="color:var(--gold); margin-bottom:20px; text-align:center;">تصدير العمل</h2>
-            <div style="margin-bottom:20px;">
-                <label style="display:block; margin-bottom:10px; font-size:0.8em; opacity:0.7;">اختر القياس</label>
-                <select id="formatSelect" style="width:100%; padding:12px; background:#111; border:1px solid var(--gold); color:#fff; border-radius:10px;"></select>
+            <h2 style="color:var(--gold); margin-bottom:20px; text-align:center; font-family:'Cairo';">تصدير التصميم</h2>
+            <select id="formatSelect" style="width:100%; padding:12px; background:#111; border:1px solid var(--gold); color:#fff; border-radius:10px; margin-bottom:20px; font-family:'Cairo';"></select>
+            <div style="display:flex; gap:10px;">
+                <button id="confirmSave" style="flex:1; padding:15px; background:var(--gold); border:none; border-radius:15px; font-weight:bold; cursor:pointer; font-family:'Cairo';">تصدير</button>
+                <button id="closeSave" style="flex:1; padding:15px; background:#222; color:#fff; border:none; border-radius:15px; cursor:pointer; font-family:'Cairo';">إلغاء</button>
             </div>
-            <button id="confirmSave" style="width:100%; padding:15px; background:var(--gold); border:none; border-radius:15px; font-weight:bold; cursor:pointer;">تأكيد الحفظ</button>
         </div>
     </div>
 
     <canvas id="imageCanvas" style="display:none;"></canvas>
     <div id="toast" class="toast"></div>
 
-    <script>window.currentSection = 'home';</script>
+    <script>window.currentSection = 'quotes';</script>
     <script src="quotes_data.js"></script>
     <script src="app.js"></script>
 </body>

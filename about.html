@@ -9,37 +9,45 @@
 </head>
 <body>
     <canvas id="particlesCanvas"></canvas>
+    
+    <div class="fixed-nav">
+        <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="fixed-btn">▲</button>
+        <a href="index.html" class="fixed-btn">🏠</a>
+        <button onclick="window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'})" class="fixed-btn">▼</button>
+    </div>
+
     <div class="container">
         <header>
             <h1>حول الموقع</h1>
             <p class="subtitle">ABOUT THE PROJECT</p>
         </header>
+
         <main>
-            <a href="index.html" class="back-btn-top">🏠 العودة للرئيسية</a>
-            <div class="main-card">
-                <div class="card-title">نبذة عن المشروع</div>
-                <div class="quote-content" style="font-size: 1.1em; text-align: justify; font-family: 'Cairo';">
-                    موقع <strong>"معدن الحكمة"</strong> هو منصة رقمية متكاملة تهدف إلى جمع وتوثيق ونشر تراث أمير المؤمنين الإمام علي بن أبي طالب (عليه السلام) بأسلوب عصري وفخم. يجمع الموقع بين بلاغة الكلمة وجمال التصميم، ليوفر للمستخدم تجربة روحية وبصرية فريدة.
-                </div>
-                <div style="margin-top: 30px; border-top: 1px solid rgba(212, 168, 67, 0.2); padding-top: 20px;">
-                    <h3 style="color: var(--gold); margin-bottom: 15px;">حقوق التطوير</h3>
-                    <p style="font-size: 0.9em; opacity: 0.8; margin-bottom: 10px;">تم تطوير هذا المشروع بإشراف فني وتقني دقيق لضمان أعلى مستويات الجودة.</p>
-                    <p style="font-size: 1em; color: var(--gold);">INSTA: @ne_7u</p>
-                    <p style="font-size: 1em; color: var(--gold);">TELEGRAM: @WWGTR</p>
+            <div class="main-card" style="text-align:center; padding:40px;">
+                <div class="card-title">تعريف</div>
+                <div class="quote-content" style="font-size:1.1em; line-height:2; font-family:'Cairo';">
+                    <p>هذا الموقع هو منصة رقمية مخصصة لجمع وتوثيق تراث أمير المؤمنين علي بن أبي طالب (عليه السلام)، من حكم، وأشعار، ونبذات تعريفية، بأسلوب عصري يجمع بين الأصالة والتكنولوجيا.</p>
+                    <br>
+                    <p style="color:var(--gold);">تم التطوير والإشراف بواسطة:</p>
+                    <p style="font-weight:bold; font-size:1.4em; color:var(--gold);">INSTA: NE_7U | TELEGRAM: WWGTR</p>
+                    <br>
+                    <p>يهدف المشروع إلى نشر الحكمة العلوية وتسهيل مشاركتها عبر وسائل التواصل الاجتماعي بجودة عالية وتصاميم فخمة.</p>
                 </div>
             </div>
+
             <nav class="sections-nav">
-                <a href="index.html" class="nav-item">الحكم</a>
+                <a href="index.html" class="nav-item">الاقتباسات</a>
                 <a href="poetry.html" class="nav-item">الشعر</a>
-                <a href="quotes.html" class="nav-item">الاقتباسات</a>
+                <a href="bios.html" class="nav-item">النبذات</a>
                 <a href="about.html" class="nav-item active">حول</a>
             </nav>
-            <a href="index.html" class="back-btn-bottom">🏠 العودة للرئيسية</a>
         </main>
+
         <footer class="footer-rights">
             <p>INSTA : NE_7U | TELEGRAM : WWGTR</p>
         </footer>
     </div>
+
     <script src="app.js"></script>
 </body>
 </html>

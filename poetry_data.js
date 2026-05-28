@@ -1,4 +1,4 @@
-var poetryData = [
+const poetryData = [
     {
         "title": "إذا النائبات بلغن المدى",
         "lines": [
@@ -5622,5 +5622,3 @@ var poetryData = [
         ]
     }
 ];
-
-export default poems;
